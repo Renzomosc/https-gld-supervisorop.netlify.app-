@@ -510,6 +510,75 @@ async function askClaude(messages, apiKey, maxTokens=1200) {
 function dataURLtoBase64(durl) { return (durl||"").split(",")[1] || ""; }
 function dataURLmime(durl) { const m = (durl||"").match(/^data:([^;]+);/); return m ? m[1] : "application/octet-stream"; }
 
+// === Descargas Word + Excel + CSV ===
+function descargarArchivo(nombre, contenido, mime) {
+  try {
+    const blob = new Blob([contenido], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = nombre;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    return true;
+  } catch (e) { console.error(e); alert("No pude descargar: " + e.message); return false; }
+}
+function descargarWord(nombreSinExt, titulo, contenidoTexto, fotos=[]) {
+  // Word abre HTML perfectamente. Generamos .doc con HTML inline.
+  const fotosHtml = fotos.length ? `<h3>Panel fotográfico</h3>` + fotos.map(f => `<p><img src="${f.data}" style="max-width:480px;height:auto;border:1px solid #ccc"/><br/><small style="color:#666">${(f.sec||"")+(f.cap?" — "+f.cap:"")}</small></p>`).join("") : "";
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${titulo}</title>
+<style>
+body{font-family:'Calibri',sans-serif;margin:1in;color:#191712;line-height:1.45}
+h1{color:#FF5A1F;border-bottom:3px solid #FF5A1F;padding-bottom:6px}
+h2{color:#FF5A1F;margin-top:18px;font-size:14pt}
+h3{color:#5a6478;font-size:12pt;margin-top:14px}
+pre{font-family:'Calibri',sans-serif;white-space:pre-wrap;font-size:11pt}
+table{border-collapse:collapse;width:100%;margin:8px 0}
+th{background:#191712;color:#fff;padding:7px;text-align:left}
+td{padding:6px;border-bottom:1px solid #d6d1c4}
+.brand{background:linear-gradient(135deg,#FF5A1F,#ff8855);color:#fff;padding:14px;border-radius:6px;margin-bottom:14px}
+.kpis{display:flex;gap:8px;margin:10px 0}
+.kpi{flex:1;border:1px solid #d6d1c4;border-radius:6px;padding:8px;text-align:center}
+.kpi b{font-size:18pt}
+</style></head><body>
+<div class="brand">
+  <div style="font-size:9pt;text-transform:uppercase;letter-spacing:.1em">GLD · Supervisión de Producción</div>
+  <h1 style="margin:4px 0;border:none;color:#fff">${titulo}</h1>
+</div>
+<pre>${contenidoTexto.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</pre>
+${fotosHtml}
+<hr style="margin-top:24px;border:none;border-top:2px solid #FF5A1F"/>
+<p style="font-size:9pt;color:#666">Generado por GLD Campo · ${fmtFecha(hoy())} · Confidencial</p>
+</body></html>`;
+  return descargarArchivo(nombreSinExt + ".doc", html, "application/msword");
+}
+function descargarCSV(nombreSinExt, headers, rows) {
+  const esc = (v) => { const s = String(v == null ? "" : v); return /[;\n"]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s; };
+  const lines = [headers.map(esc).join(";"), ...rows.map(r => headers.map(h => esc(r[h])).join(";"))];
+  // BOM para Excel reconozca UTF-8
+  return descargarArchivo(nombreSinExt + ".csv", "﻿" + lines.join("\n"), "text/csv;charset=utf-8");
+}
+function descargarExcelXML(nombreSinExt, hojas) {
+  // Excel XML 2003 (.xls) — sin librería, Excel lo abre perfecto y deja editar
+  const escXml = (s) => String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  const cell = (v) => {
+    if (v == null) return '<Cell><Data ss:Type="String"></Data></Cell>';
+    if (typeof v === "number") return `<Cell><Data ss:Type="Number">${v}</Data></Cell>`;
+    return `<Cell><Data ss:Type="String">${escXml(v)}</Data></Cell>`;
+  };
+  const sheetsXml = hojas.map(h => {
+    const headerRow = `<Row>${h.headers.map(c => `<Cell ss:StyleID="head"><Data ss:Type="String">${escXml(c)}</Data></Cell>`).join("")}</Row>`;
+    const dataRows = h.rows.map(r => `<Row>${h.headers.map(col => cell(r[col])).join("")}</Row>`).join("");
+    return `<Worksheet ss:Name="${escXml(h.nombre || "Hoja").slice(0,31)}"><Table>${headerRow}${dataRows}</Table></Worksheet>`;
+  }).join("");
+  const xml = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles><Style ss:ID="head"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#191712" ss:Pattern="Solid"/></Style></Styles>
+${sheetsXml}
+</Workbook>`;
+  return descargarArchivo(nombreSinExt + ".xls", xml, "application/vnd.ms-excel");
+}
+
 /* ============================ MENSAJES JORNADA (formato exacto WhatsApp) ============================ */
 function reporteJornadaTexto(tipo, obra, datos) {
   const f = fmtFecha(hoy());
@@ -563,6 +632,38 @@ const Section = ({ title, children, icon: Ico }) => (
 );
 const Field = ({ label, children }) => (<div style={{ marginBottom: 11 }}>{label && <label className="lbl">{label}</label>}{children}</div>);
 const TInput = (p) => <input className="inp" {...p} />;
+// TimeInput robusto: acepta texto, valida HH:MM, botón "Ahora", sin depender de input nativo type=time
+const TimeInput = ({ value, onChange, placeholder="HH:MM" }) => {
+  const [local, setLocal] = useState(value || "");
+  useEffect(() => { setLocal(value || ""); }, [value]);
+  const commit = (v) => {
+    let cleaned = (v || "").replace(/[^\d:]/g, "");
+    if (cleaned.length === 4 && !cleaned.includes(":")) cleaned = cleaned.slice(0,2) + ":" + cleaned.slice(2);
+    if (cleaned.length === 3 && !cleaned.includes(":")) cleaned = "0" + cleaned.slice(0,1) + ":" + cleaned.slice(1);
+    if (/^(\d{1,2}):(\d{2})$/.test(cleaned)) {
+      const [h, m] = cleaned.split(":").map(Number);
+      if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+        const fmt = String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0");
+        setLocal(fmt);
+        onChange({ target: { value: fmt } });
+        return;
+      }
+    }
+    setLocal(value || "");
+  };
+  const ahora = () => {
+    const d = new Date();
+    const fmt = String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
+    setLocal(fmt);
+    onChange({ target: { value: fmt } });
+  };
+  return (
+    <div style={{ display:"flex", gap:5 }}>
+      <input className="inp" type="text" inputMode="numeric" pattern="[0-9]{2}:[0-9]{2}" maxLength={5} value={local} placeholder={placeholder} onChange={e => setLocal(e.target.value)} onBlur={e => commit(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { commit(e.target.value); e.target.blur(); } }} style={{ flex:1, fontFamily:"'JetBrains Mono',monospace", letterSpacing:"1px", textAlign:"center" }} />
+      <button type="button" className="btn" onClick={ahora} style={{ background:"var(--surface3)", color:"var(--ink)", padding:"0 11px", fontSize:11.5, whiteSpace:"nowrap" }}>Ahora</button>
+    </div>
+  );
+};
 const TArea = (p) => <textarea className="inp" rows={p.rows || 3} {...p} style={{ resize:"vertical", lineHeight:1.45, ...(p.style||{}) }} />;
 const Sel = ({ value, onChange, options }) => (<select className="inp" value={value} onChange={onChange}>{options.map((o,i) => <option key={i} value={o.value ?? o}>{o.label ?? o}</option>)}</select>);
 const Toggle = ({ label, value, onChange }) => (
@@ -1061,7 +1162,7 @@ ${JSON.stringify(ctx)}`;
       {/* 2 — PERSONAL Y EPP */}
       <Section title="2. Personal, EPP y zona segura" icon={Users}>
         <Field><Toggle label="¿Llegó el contratista?" value={f.contratistaLlego} onChange={(v) => up("contratistaLlego", v)} /></Field>
-        {f.contratistaLlego && <div style={{ display:"flex", gap:10, alignItems:"flex-end", marginBottom:11 }}><div style={{ flex:1 }}><Field label={`Hora llegada (obj. ${horaObj})`}><TInput type="time" value={f.horaContratista} onChange={(e) => up("horaContratista", e.target.value)} /></Field></div>{f.horaContratista > horaObj && <span className="chip" style={{ background:"var(--rojo)", color:"#fff", marginBottom:17 }}>TARDE</span>}</div>}
+        {f.contratistaLlego && <div style={{ display:"flex", gap:10, alignItems:"flex-end", marginBottom:11 }}><div style={{ flex:1 }}><Field label={`Hora llegada (obj. ${horaObj})`}><TimeInput value={f.horaContratista} onChange={(e) => up("horaContratista", e.target.value)} /></Field></div>{f.horaContratista > horaObj && <span className="chip" style={{ background:"var(--rojo)", color:"#fff", marginBottom:17 }}>TARDE</span>}</div>}
         <Field label="EPP completos / zona segura">
           <div style={{ display:"flex", gap:5 }}>
             {["Conforme","Observado","Pendiente"].map(e => (
@@ -1088,7 +1189,7 @@ ${JSON.stringify(ctx)}`;
                 <>
                   <div style={{ display:"flex", gap:8 }}>
                     <div style={{ width:78 }}><label className="lbl">Pers.</label><TInput type="number" min="0" value={c.personas} onChange={(e) => setCuad(c.id, "personas", e.target.value)} /></div>
-                    <div style={{ flex:1 }}><label className="lbl">Hora llegada</label><TInput type="time" value={c.horaLlegada || c.hora} onChange={(e) => { setCuad(c.id, "horaLlegada", e.target.value); setCuad(c.id, "hora", e.target.value); }} /></div>
+                    <div style={{ flex:1 }}><label className="lbl">Hora llegada</label><TimeInput value={c.horaLlegada || c.hora} onChange={(e) => { setCuad(c.id, "horaLlegada", e.target.value); setCuad(c.id, "hora", e.target.value); }} /></div>
                     {(c.horaLlegada || c.hora) > horaObj && <span className="chip" style={{ background:"var(--rojo)", color:"#fff", alignSelf:"flex-end", marginBottom:11 }}>TARDE</span>}
                   </div>
                   <input className="inp" style={{ marginTop:8 }} placeholder="Observación (quiénes / nota)" value={c.obs} onChange={(e) => setCuad(c.id, "obs", e.target.value)} />
@@ -1544,7 +1645,7 @@ function ObrasScreen({ obras, save, onAbrirNota }) {
         <Field label="Dirección / local"><TInput value={ed.direccion} onChange={e=>setEd({...ed, direccion:e.target.value})} /></Field>
         <div style={{ display:"flex", gap:10 }}>
           <div style={{ flex:1 }}><Field label="m²"><TInput type="number" value={ed.m2} onChange={e=>setEd({...ed, m2:e.target.value})} /></Field></div>
-          <div style={{ flex:1 }}><Field label="Hora inicio obj."><TInput type="time" value={ed.horaInicio} onChange={e=>setEd({...ed, horaInicio:e.target.value})} /></Field></div>
+          <div style={{ flex:1 }}><Field label="Hora inicio obj."><TimeInput value={ed.horaInicio} onChange={e=>setEd({...ed, horaInicio:e.target.value})} /></Field></div>
         </div>
         <Field label="Etapa actual"><TInput value={ed.etapa} onChange={e=>setEd({...ed, etapa:e.target.value})} placeholder="Ej. Acabados / Demolición / Pre-apertura" /></Field>
         <div style={{ display:"flex", gap:10 }}>
@@ -1753,6 +1854,7 @@ function ConfigScreen({ cfg, save, reload }) {
 
 /* ============================ INICIO ============================ */
 function Inicio({ obras, visitas, notas, incidencias, decisiones, crono, cfg, planesDiarios={}, jornadaLog={}, goObras, goVisita, goDecision, goJornada, goAgenda, goNotas, goPersonas, goCfg, goCumplimiento, goPlan, goIncidencias, goReportes, onQuickNota, onAbrirObra, onMarcarNota, onAyudaIA }) {
+  const [kpiModal, setKpiModal] = useState(null);
   const today = hoy();
   const alertas = visitas.filter(v => v.alerta !== "Verde");
   const decPend = decisiones.filter(d => d.estado !== "Pagado").length;
@@ -1794,18 +1896,77 @@ function Inicio({ obras, visitas, notas, incidencias, decisiones, crono, cfg, pl
         </div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:8 }}>
           {[
-            { v: obras.length, l:"Obras", c:"var(--accent)", fn: goObras },
-            { v: alertas.length, l:"Alertas", c: alertas.length ? "var(--rojo)" : "var(--verde)", fn: alertas.length ? goReportes : null },
-            { v: incAbiertas, l:"Incid.", c: incAbiertas ? "var(--ambar)" : "var(--ink2)", fn: incAbiertas ? goIncidencias : goIncidencias },
-            { v: notasPend.length, l:"Notas", c: notasPend.length ? "var(--ia)" : "var(--ink2)", fn: goNotas },
-          ].map((k,i) => (
-            <button key={i} onClick={k.fn} disabled={!k.fn} className="btn" style={{ textAlign:"center", padding:"10px 4px", background:"var(--surface)", borderRadius:10, border:"1px solid var(--border-soft)", cursor: k.fn ? "pointer" : "default" }}>
+            {
+              k:"obras", v: obras.length, l:"Obras", c:"var(--accent)",
+              data: () => ({
+                titulo: `Obras activas (${obras.length})`,
+                explicacion: "Todas las obras registradas en el sistema. Tocá cada una para entrar al detalle.",
+                items: obras.map(o => { const d = diasPara(o.fechaApertura); return { titulo: o.nombre, sub: `${o.cliente} · ${o.etapa || "—"}${d != null ? " · apertura en " + (d >= 0 ? d + "d" : "VENCIDA") : ""}`, urgent: d != null && d < 7, onClick: () => onAbrirObra && onAbrirObra(o.id) }; }),
+                irA: { label: "Ir a Tiendas (CRUD)", fn: goObras }
+              })
+            },
+            {
+              k:"alertas", v: alertas.length, l:"Alertas", c: alertas.length ? "var(--rojo)" : "var(--verde)",
+              data: () => ({
+                titulo: `Visitas con alerta Rojo/Ámbar (${alertas.length})`,
+                explicacion: alertas.length ? "Visitas registradas con nivel de alerta no-Verde. La alerta la pone el supervisor al guardar la visita, según riesgo a la apertura/cronograma." : "Sin alertas activas. Las últimas visitas se reportaron en Verde.",
+                items: alertas.slice(0,15).map(v => { const o = obras.find(x => x.id === v.obraId); return { titulo: `${o?.nombre || "Obra"} · ${fmtFecha(v.fecha)}`, sub: `${v.alerta} · ${v.resumen || v.avanceNota || "Sin resumen"}`, badge: v.alerta, badgeColor: semColor(v.alerta), onClick: goReportes }; }),
+                irA: { label: "Ir a Reportes", fn: goReportes }
+              })
+            },
+            {
+              k:"incid", v: incAbiertas, l:"Incid.", c: incAbiertas ? "var(--ambar)" : "var(--ink2)",
+              data: () => {
+                const abiertas = incidencias.filter(i => i.estado === "Abierta");
+                return {
+                  titulo: `Incidencias abiertas (${abiertas.length})`,
+                  explicacion: abiertas.length ? "Incidencias pendientes de resolución. Las severidad Alta requieren atención inmediata." : "Sin incidencias abiertas. Todo bajo control.",
+                  items: abiertas.slice(0,15).map(x => ({ titulo: `${x.obraNombre} · ${fmtFecha(x.fecha)}`, sub: x.desc + (x.accion ? " → " + x.accion : ""), badge: x.sev, badgeColor: sevColor(x.sev), onClick: goIncidencias })),
+                  irA: { label: "Ir a Incidencias", fn: goIncidencias }
+                };
+              }
+            },
+            {
+              k:"notas", v: notasPend.length, l:"Notas", c: notasPend.length ? "var(--ia)" : "var(--ink2)",
+              data: () => ({
+                titulo: `Notas pendientes (${notasPend.length})`,
+                explicacion: notasPend.length ? "Recordatorios que coordinaste por WhatsApp o teléfono y aún no se trataron en obra. Aparecen en el briefing cuando hacés una visita a esa obra." : "Sin notas pendientes. Si te queda algo coordinado por WhatsApp, anotalo desde el botón flotante 📝.",
+                items: notasPend.slice(0,15).map(n => { const o = obras.find(x => x.id === n.obraId); return { titulo: `${o?.nombre || "—"} · ${fmtFecha(n.fecha)}${n.fuente ? " · " + n.fuente : ""}`, sub: n.texto, onClick: goNotas }; }),
+                irA: { label: "Ir a Notas", fn: goNotas }
+              })
+            },
+          ].map((k) => (
+            <button key={k.k} onClick={() => setKpiModal(k.data())} className="btn" style={{ textAlign:"center", padding:"10px 4px", background:"var(--surface)", borderRadius:10, border:"1px solid var(--border-soft)", cursor:"pointer" }}>
               <div className="disp" style={{ fontSize:24, color:k.c, lineHeight:1 }}>{k.v}</div>
               <div className="lbl" style={{ marginBottom:0, fontSize:9, marginTop:4 }}>{k.l}</div>
             </button>
           ))}
         </div>
       </div>
+
+      <Modal open={!!kpiModal} onClose={() => setKpiModal(null)} title={kpiModal?.titulo || ""} maxWidth={520}>
+        {kpiModal && (
+          <>
+            <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:14, lineHeight:1.5, padding:10, background:"var(--surface)", borderRadius:8, border:"1px solid var(--border-soft)" }}>{kpiModal.explicacion}</div>
+            {kpiModal.items.length > 0 ? (
+              <div style={{ maxHeight:"50vh", overflowY:"auto", marginBottom:12 }}>
+                {kpiModal.items.map((it, i) => (
+                  <div key={i} onClick={() => { it.onClick && it.onClick(); setKpiModal(null); }} className="list-item" style={{ padding:"10px 0", borderBottom: i < kpiModal.items.length - 1 ? "1px solid var(--border-soft)" : "none", cursor: it.onClick ? "pointer" : "default", display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8 }}>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:13.5, fontWeight:600, color: it.urgent ? "var(--rojo)" : "var(--ink)" }}>{it.titulo}</div>
+                      <div style={{ fontSize:12, color:"var(--ink2)", marginTop:3, lineHeight:1.4 }}>{it.sub}</div>
+                    </div>
+                    {it.badge && <span className="chip" style={{ background: it.badgeColor + "22", color: it.badgeColor, border:`1px solid ${it.badgeColor}55`, flex:"0 0 auto" }}>{it.badge}</span>}
+                  </div>
+                ))}
+              </div>
+            ) : <div style={{ textAlign:"center", padding:20, color:"var(--ink3)", fontSize:13 }}>Sin elementos</div>}
+            {kpiModal.irA && (
+              <button onClick={() => { kpiModal.irA.fn(); setKpiModal(null); }} className="btn" style={{ background:"linear-gradient(135deg, var(--accent), #ff8855)", color:"#fff", padding:12, width:"100%", fontWeight:600 }}>{kpiModal.irA.label} →</button>
+            )}
+          </>
+        )}
+      </Modal>
 
       {/* Botones principales: Visita + Plan IA */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
@@ -1928,7 +2089,9 @@ function Inicio({ obras, visitas, notas, incidencias, decisiones, crono, cfg, pl
 /* ============================ APP ROOT ============================ */
 function App() {
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("inicio");
+  const [tab, _setTab] = useState("inicio");
+  const [lastTab, setLastTab] = useState("inicio");
+  const setTab = (newTab) => { setLastTab(prev => tab === "ia" ? prev : tab); _setTab(newTab); };
   const [obras, setObras] = useState([]);
   const [visitas, setVisitas] = useState([]);
   const [notas, setNotas] = useState([]);
@@ -2106,7 +2269,12 @@ function App() {
   else if (tab === "obras") body = <ObrasScreen obras={obras} save={saveObras} onAbrirNota={(id)=>setQuickNota({ open:true, obraId:id })} />;
   else if (tab === "notas") body = <NotasScreen obras={obras} notas={notas} save={saveNotas} />;
   else if (tab === "incidencias") body = <IncidenciasScreen obras={obras} incidencias={incidencias} save={saveIncidencias} cfg={cfg} cerebro={cerebro} apiKey={cfg.anthKey} />;
-  else if (tab === "ia") body = <IAChat obras={obras} visitas={visitas} notas={notas} incidencias={incidencias} decisiones={decisiones} crono={crono} cerebro={cerebro} apiKey={cfg.anthKey} />;
+  else if (tab === "ia") {
+    // Contexto contextual: detectar de qué pantalla venía el usuario
+    const ctxKey = lastTab === "visita" ? "visita" : lastTab === "obra" ? "obra" : lastTab === "reportes" ? "reportes" : lastTab === "incidencias" ? "incidencias" : lastTab === "cerebro" ? "cerebro" : lastTab === "plan" ? "crono" : "inicio";
+    const ctxData = ctxKey === "visita" ? editVisita : ctxKey === "obra" ? { obraId: selObra, obra: obras.find(o => o.id === selObra) } : null;
+    body = <IAChat obras={obras} visitas={visitas} notas={notas} incidencias={incidencias} decisiones={decisiones} crono={crono} cerebro={cerebro} apiKey={cfg.anthKey} contextKey={ctxKey} contextData={ctxData} />;
+  }
   else if (tab === "plan") body = <PlanesIAScreen obras={obras} cronoDocs={cronoDocs} crono={crono} visitas={visitas} notas={notas} incidencias={incidencias} cerebro={cerebro} apiKey={cfg.anthKey} savePlanDiario={savePlanDiario} />;
   else if (tab === "cerebro") body = <CerebroScreen cerebro={cerebro} save={saveCerebro} apiKey={cfg.anthKey} />;
   else if (tab === "config") body = <ConfigScreen cfg={cfg} save={saveCfg} reload={loadAll} />;
@@ -2137,12 +2305,26 @@ function App() {
       <QuickNotaModal open={quickNota.open} onClose={()=>setQuickNota({ open:false, obraId:"" })} obras={obras} defaultObraId={quickNota.obraId} onSave={(n) => saveNotas([...notas, n])} />
       <AyudaIAModal open={ayudaIA} onClose={()=>setAyudaIA(false)} goCfg={()=>{ setAyudaIA(false); setTab("config"); }} />
       <AprenderCerebroModal open={aprender.open} visita={aprender.visita} obras={obras} cerebro={cerebro} apiKey={cfg.anthKey} onClose={()=>{ setAprender({ open:false, visita:null }); setTab("inicio"); }} onGuardar={async(entradas) => { const nuevos = entradas.map(e => ({ ...e, id: uid(), fecha: hoy() })); const all = [...cerebro, ...nuevos]; setCerebro(all); await store.set("cerebro", all); setAprender({ open:false, visita:null }); setTab("inicio"); alert(`Se agregaron ${nuevos.length} entrada(s) al cerebro.`); }} />
-      {tab !== "ia" && (
-        <button onClick={() => setTab("ia")} className="hide-print" style={{ position:"fixed", bottom:84, right:14, width:56, height:56, borderRadius:99, background:"linear-gradient(135deg, var(--ia), #c4b5fd)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 24px -4px var(--ia-glow), 0 0 0 1px var(--ia)", zIndex:9 }}>
-          <Sparkles size={24} color="#fff" strokeWidth={2.2} />
-          <span style={{ position:"absolute", top:-4, right:-4, width:14, height:14, borderRadius:99, background:"var(--cyan)", border:"2px solid var(--bg)", boxShadow:"0 0 8px var(--cyan-glow)" }} />
-        </button>
-      )}
+      {/* FABs flotantes — Copiloto IA + Cerebro + Notas */}
+      <div className="hide-print" style={{ position:"fixed", bottom:84, right:14, display:"flex", flexDirection:"column", gap:10, zIndex:9 }}>
+        {tab !== "cerebro" && (
+          <button onClick={() => setTab("cerebro")} title="Cerebro" style={{ width:48, height:48, borderRadius:99, background:"var(--surface2)", border:"1.5px solid var(--ia)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 4px 16px -4px var(--ia-glow)" }}>
+            <span style={{ fontSize:22 }}>🧠</span>
+          </button>
+        )}
+        {tab !== "notas" && (
+          <button onClick={() => setTab("notas")} title="Notas" style={{ width:48, height:48, borderRadius:99, background:"var(--surface2)", border:`1.5px solid var(--cyan)`, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 4px 16px -4px var(--cyan-glow)", position:"relative" }}>
+            <MessageSquare size={20} color="var(--cyan)" strokeWidth={2.2} />
+            {(notas||[]).filter(n=>n.estado==="Pendiente").length > 0 && <span style={{ position:"absolute", top:-3, right:-3, background:"var(--cyan)", color:"#0a0d13", borderRadius:99, fontSize:9, fontWeight:700, minWidth:16, height:16, display:"flex", alignItems:"center", justifyContent:"center", padding:"0 4px" }}>{(notas||[]).filter(n=>n.estado==="Pendiente").length}</span>}
+          </button>
+        )}
+        {tab !== "ia" && (
+          <button onClick={() => setTab("ia")} title="Copiloto Claude" style={{ width:60, height:60, borderRadius:99, background:"linear-gradient(135deg, var(--ia), #c4b5fd)", border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 8px 24px -4px var(--ia-glow), 0 0 0 1px var(--ia)", position:"relative" }}>
+            <Sparkles size={26} color="#fff" strokeWidth={2.2} />
+            <span style={{ position:"absolute", top:-2, right:-2, width:13, height:13, borderRadius:99, background:"var(--cyan)", border:"2px solid var(--bg)", boxShadow:"0 0 8px var(--cyan-glow)" }} />
+          </button>
+        )}
+      </div>
       <nav className="hide-print" style={{ position:"fixed", bottom:0, left:0, right:0, maxWidth:520, margin:"0 auto", background:"rgba(10,13,19,.85)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", display:"flex", padding:"8px 0 10px", borderTop:"1px solid var(--border)" }}>
         {NAV.map(([k,l,Ico]) => {
           const active = tab === k;
@@ -2162,8 +2344,6 @@ function App() {
 function MasMenu({ setTab }) {
   const grupos = [
     { titulo:"INTELIGENCIA / IA", items:[
-      { k:"cerebro", l:"Cerebro", sub:"Conocimiento técnico y checklists IA", Ico:Sparkles, color:"var(--ia)" },
-      { k:"ia", l:"Copiloto Claude", sub:"Chat sobre tus obras", Ico:MessageSquare, color:"var(--ia)" },
       { k:"cumplimiento", l:"Cumplimiento del día", sub:"Plan vigente + tracking", Ico:CheckCircle2, color:"var(--verde)" },
     ]},
     { titulo:"COMUNICACIÓN", items:[
@@ -2172,7 +2352,6 @@ function MasMenu({ setTab }) {
     ]},
     { titulo:"DATOS / SEGUIMIENTO", items:[
       { k:"obras", l:"Tiendas", sub:"CRUD de obras", Ico:Building2, color:"var(--accent)" },
-      { k:"notas", l:"Notas", sub:"Recordatorios por obra", Ico:Flag, color:"var(--ia)" },
       { k:"incidencias", l:"Incidencias", sub:"Vista transversal", Ico:AlertTriangle, color:"var(--ambar)" },
       { k:"personas", l:"Directorio", sub:"Equipo, residentes, proveedores", Ico:Users, color:"var(--cyan)" },
     ]},
@@ -2447,7 +2626,7 @@ function AgendaScreen({ obras, agenda, save }) {
         <Field label="Obra"><Sel value={add.obraId} onChange={e => setAdd({ ...add, obraId: e.target.value })} options={[{ value:"", label:"— Elegir —" }, ...obras.map(o => ({ value:o.id, label:`${o.cliente} · ${o.nombre}` }))]} /></Field>
         <div style={{ display:"flex", gap:10 }}>
           <div style={{ flex:1 }}><Field label="Fecha"><TInput type="date" value={add.fecha} onChange={e => setAdd({ ...add, fecha: e.target.value })} /></Field></div>
-          <div style={{ flex:1 }}><Field label="Hora"><TInput type="time" value={add.hora} onChange={e => setAdd({ ...add, hora: e.target.value })} /></Field></div>
+          <div style={{ flex:1 }}><Field label="Hora"><TimeInput value={add.hora} onChange={e => setAdd({ ...add, hora: e.target.value })} /></Field></div>
         </div>
         <Field label="Nota (objetivo de la visita)"><TInput value={add.nota} onChange={e => setAdd({ ...add, nota: e.target.value })} placeholder="Ej. revisar avance drywall y eléctricas" /></Field>
       </Section>
@@ -3401,47 +3580,23 @@ function IncidenciasScreen({ obras, incidencias, save, cfg, cerebro=[], apiKey }
     const obra = obras.find(o => o.id === inc.obraId);
     const cb = cerebroContexto(cerebro, inc.desc);
     const otras = incidencias.filter(x => x.obraId === inc.obraId && x.id !== inc.id).slice(0,8);
-    const prompt = `Eres el copiloto de Renzo Moscol (Supervisor de Producción GLD). Generá un INFORME DE INCIDENCIA EJECUTIVO en español, claro y técnico, expandiendo y mejorando lo que Renzo apuntó (que es breve por estar en obra).
+    const prompt = `Eres el copiloto de Renzo Moscol (Supervisor de Producción GLD). Generá un INFORME DE INCIDENCIA COMPACTO en español, técnico, justo y necesario. SIN floreo, SIN antecedentes largos, SIN sección de "prevención futura". Solo lo esencial.
 
-Formato:
+Formato EXACTO (máx 8 líneas total):
 
-INFORME DE INCIDENCIA
-Obra: ${obra?.cliente} · ${obra?.nombre}
-Fecha: ${fmtFecha(inc.fecha)}
-Severidad: ${inc.sev}
-Estado: ${inc.estado}
+INCIDENCIA · ${obra?.cliente} · ${obra?.nombre}
+Fecha: ${fmtFecha(inc.fecha)} · Severidad: ${inc.sev}
 
-1. ANTECEDENTES
-[contexto de la obra a esa fecha — etapa, partidas activas, días a apertura, etc.]
+Hecho: [1 frase técnica describiendo qué pasó, mejorando la redacción de la nota original]
+Causa: [1 frase con la causa raíz más probable]
+Impacto: [1 frase sobre cronograma/apertura/partidas afectadas]
+Acción: [1-2 frases con acción inmediata, expandida pero concisa]
+Responsable: [quién lo resuelve / a quién informar]
 
-2. DESCRIPCIÓN DEL HECHO
-[expandí la descripción de Renzo, redacta profesional y completa, explicando técnicamente qué pasó]
+NOTA ORIGINAL: ${JSON.stringify({ desc: inc.desc, accion: inc.accion })}
+OBRA: ${obra?.nombre} (${obra?.etapa || "—"}), apertura ${obra?.fechaApertura} (${diasPara(obra?.fechaApertura)}d)${cb ? "\nCEREBRO: "+cb.slice(0,500) : ""}
 
-3. CAUSAS RAÍZ
-[análisis de causas — humano, técnico, logístico, etc.]
-
-4. IMPACTO
-[impacto en cronograma, costo, calidad, apertura, partidas dependientes, etc.]
-
-5. ACCIONES TOMADAS / RECOMENDADAS
-[expandí la acción que Renzo apuntó; agregá acciones de seguimiento y mitigación]
-
-6. RESPONSABILIDADES
-[a quién corresponde resolver / quién debe ser informado]
-
-7. PREVENCIÓN
-[cómo evitar que se repita]
-
-DATOS DE LA INCIDENCIA:
-${JSON.stringify(inc)}
-
-OTRAS INCIDENCIAS EN LA MISMA OBRA (contexto):
-${JSON.stringify(otras)}
-
-DETALLE OBRA:
-${JSON.stringify(obra)}${cb ? "\n\nCEREBRO:\n"+cb : ""}
-
-Sé técnico, ejecutivo y específico. No agregues texto fuera del formato.`;
+Reglas: sé compacto. Cada línea importa. No repitas info entre secciones. No agregues texto fuera del formato.`;
     const t = await askClaude([{ role:"user", content: prompt }], apiKey, 2000);
     setReporteIA(t); setReporteLoad(false);
   };
@@ -3501,10 +3656,30 @@ Sé técnico, ejecutivo y específico. No agregues texto fuera del formato.`;
             <div className="card" style={{ padding:13, background:"var(--surface)", marginBottom:12 }}>
               <pre className="mono" style={{ whiteSpace:"pre-wrap", fontSize:12.5, margin:0, lineHeight:1.55, color:"var(--ink)" }}>{reporteIA}</pre>
             </div>
-            <div style={{ display:"flex", gap:8 }}>
-              <button onClick={async() => { const r = await shareOrCopy(reporteIA); alert(r === "copy" ? "Copiado." : "Listo."); }} className="btn" style={{ flex:1, background:"var(--surface3)", color:"var(--ink)", padding:11 }}><Copy size={14} style={{verticalAlign:-2}} /> Copiar</button>
-              {verReporte && <a className="btn" href={mailtoHref(cfg.emailJefa || cfg.emailGerencia || "", `[GLD] Informe de incidencia — ${obras.find(o=>o.id===verReporte.obraId)?.nombre || ""}`, reporteIA)} style={{ flex:1, background:"var(--accent)", color:"#fff", padding:11, textAlign:"center", textDecoration:"none" }}><Mail size={14} style={{verticalAlign:-2}} /> Enviar</a>}
+            {/* Permitir editar el informe antes de descargar */}
+            <TArea value={reporteIA} onChange={e => setReporteIA(e.target.value)} rows={4} style={{ marginBottom:8 }} placeholder="Editá si querés ajustar antes de exportar" />
+            <div style={{ display:"flex", gap:8, marginBottom:8 }}>
+              <button onClick={async() => { const r = await shareOrCopy(reporteIA); alert(r === "copy" ? "Copiado." : "Listo."); }} className="btn" style={{ flex:1, background:"var(--surface3)", color:"var(--ink)", padding:11, fontSize:13 }}><Copy size={14} style={{verticalAlign:-2}} /> Copiar</button>
+              {verReporte && <a className="btn" href={mailtoHref(cfg.emailJefa || cfg.emailGerencia || "", `[GLD] Informe de incidencia — ${obras.find(o=>o.id===verReporte.obraId)?.nombre || ""}`, reporteIA)} style={{ flex:1, background:"var(--accent)", color:"#fff", padding:11, textAlign:"center", textDecoration:"none", fontSize:13 }}><Mail size={14} style={{verticalAlign:-2}} /> Enviar</a>}
             </div>
+            {verReporte && (
+              <div style={{ display:"flex", gap:8 }}>
+                <button onClick={() => descargarWord(`incidencia-${obras.find(o=>o.id===verReporte.obraId)?.nombre?.replace(/\s/g,"_")||"obra"}-${verReporte.fecha}`, `Informe de Incidencia · ${obras.find(o=>o.id===verReporte.obraId)?.nombre} · ${fmtFecha(verReporte.fecha)}`, reporteIA)} className="btn" style={{ flex:1, background:"#2b579a", color:"#fff", padding:11, fontSize:13 }}>📄 Word</button>
+                <button onClick={() => {
+                  const o = obras.find(x => x.id === verReporte.obraId);
+                  descargarExcelXML(`incidencia-${o?.nombre?.replace(/\s/g,"_")||"obra"}-${verReporte.fecha}`, [{ nombre:"Incidencia", headers:["Campo","Valor"], rows: [
+                    { Campo:"Obra", Valor: o?.nombre || "" },
+                    { Campo:"Cliente", Valor: o?.cliente || "" },
+                    { Campo:"Fecha", Valor: verReporte.fecha },
+                    { Campo:"Severidad", Valor: verReporte.sev },
+                    { Campo:"Estado", Valor: verReporte.estado },
+                    { Campo:"Descripción original", Valor: verReporte.desc },
+                    { Campo:"Acción original", Valor: verReporte.accion || "" },
+                    { Campo:"Informe IA", Valor: reporteIA },
+                  ] }]);
+                }} className="btn" style={{ flex:1, background:"#107c41", color:"#fff", padding:11, fontSize:13 }}>📊 Excel</button>
+              </div>
+            )}
           </>
         )}
       </Modal>
@@ -3619,8 +3794,33 @@ ${texto}`;
                 setMejorado({ open:false, texto:"", load:false });
                 alert(r || "Sin respuesta de la IA. Verificá tu API key.");
               }
-            }} style={{ flex:1, background:"linear-gradient(135deg, var(--ia), #c4b5fd)", color:"#fff", padding:12 }}><Sparkles size={15} style={{verticalAlign:-3}} /> Mejorar texto con IA</button>
-            <button className="btn" onClick={() => window.print()} style={{ flex:1, background:"linear-gradient(135deg, var(--accent), #ff8855)", color:"#fff", padding:12 }}><Printer size={15} style={{verticalAlign:-3}} /> PDF</button>
+            }} style={{ flex:1, background:"linear-gradient(135deg, var(--ia), #c4b5fd)", color:"#fff", padding:12, fontSize:13 }}><Sparkles size={14} style={{verticalAlign:-2}} /> Mejorar IA</button>
+            <button className="btn" onClick={() => window.print()} style={{ flex:1, background:"linear-gradient(135deg, var(--accent), #ff8855)", color:"#fff", padding:12, fontSize:13 }}><Printer size={14} style={{verticalAlign:-2}} /> PDF</button>
+          </div>
+          <div style={{ display:"flex", gap:8, marginBottom:8 }}>
+            <button className="btn" onClick={() => descargarWord(`reporte-${obra?.nombre?.replace(/\s/g,"_")||"obra"}-${open.fecha}`, `Reporte Diario · ${obra?.nombre} · ${fmtFecha(open.fecha)}`, texto, allFotos)} style={{ flex:1, background:"#2b579a", color:"#fff", padding:12, fontSize:13 }}>📄 Word editable</button>
+            <button className="btn" onClick={() => {
+              const headers = ["Sección","Item","Valor"];
+              const rows = [
+                { Sección:"Datos", Item:"Obra", Valor: obra?.nombre || "" },
+                { Sección:"Datos", Item:"Cliente", Valor: obra?.cliente || "" },
+                { Sección:"Datos", Item:"Fecha", Valor: open.fecha },
+                { Sección:"Datos", Item:"Supervisor", Valor: open.supervisor || "" },
+                { Sección:"Datos", Item:"Alerta", Valor: open.alerta || "" },
+                { Sección:"KPIs", Item:"Personal", Valor: personalTotal },
+                { Sección:"KPIs", Item:"Tardanzas", Valor: tardanzas },
+                { Sección:"KPIs", Item:"Fotos", Valor: totalFotos },
+                { Sección:"KPIs", Item:"Días a apertura", Valor: dias != null ? dias : "—" },
+              ];
+              (open.cuadrillas||[]).forEach((c, i) => {
+                rows.push({ Sección:"Subcontratistas", Item: c.frente || `Frente ${i+1}`, Valor: c.llego === false ? `NO LLEGÓ${c.motivoNoLlego ? " — "+c.motivoNoLlego : ""}` : `${c.personas||0} pers · ${c.horaLlegada||c.hora||"—"}${(c.horaLlegada||c.hora) > (obra?.horaInicio||"08:00") ? " (TARDE)" : ""}${c.obs ? " · "+c.obs : ""}` });
+              });
+              PARTIDAS_AVANCE.forEach(([k, l]) => { const ap = open.avancePartidas?.[k]; if (ap && ap.notas) rows.push({ Sección:"Avance Partidas", Item: l, Valor: ap.notas }); });
+              (open.incidencias||[]).forEach((c, i) => rows.push({ Sección:"Incidencias", Item: `[${c.sev}]`, Valor: c.desc + (c.accion ? " → "+c.accion : "") }));
+              if (open.aiCritico) rows.push({ Sección:"Análisis IA", Item:"Ejecutivo", Valor: open.aiCritico });
+              if (open.aiAlerta) rows.push({ Sección:"Análisis IA", Item:`Alerta ${open.aiAlertaNivel || ""}`, Valor: open.aiAlerta });
+              descargarExcelXML(`reporte-${obra?.nombre?.replace(/\s/g,"_")||"obra"}-${open.fecha}`, [{ nombre:"Reporte", headers, rows }]);
+            }} style={{ flex:1, background:"#107c41", color:"#fff", padding:12, fontSize:13 }}>📊 Excel editable</button>
           </div>
           <MailActions to={cfg.emailJefa || cfg.emailGerencia} subject={`[GLD] Reporte diario — ${obra?.nombre || ""} — ${open.fecha}`} body={texto} />
         </div>
@@ -3744,7 +3944,37 @@ function SemanalView({ obras, visitas, crono, incidencias, decisiones, cfg, apiK
           <div className="p-footer"><span>{cfg.supervisor || "Renzo Moscol"} — Supervisor de Producción GLD</span><span>Generado: {fmtFecha(hoy())}</span></div>
         </div>
         <div className="hide-print" style={{ marginTop:12 }}>
-          <button className="btn" onClick={() => window.print()} style={{ background:"var(--surface3)", color:"var(--ink)", padding:13, width:"100%", marginBottom:8 }}><Printer size={15} style={{verticalAlign:-3}} /> Guardar como PDF / Imprimir</button>
+          <div style={{ display:"flex", gap:8, marginBottom:8 }}>
+            <button className="btn" onClick={() => window.print()} style={{ flex:1, background:"linear-gradient(135deg, var(--accent), #ff8855)", color:"#fff", padding:12, fontSize:13 }}><Printer size={14} style={{verticalAlign:-2}} /> PDF</button>
+            <button className="btn" onClick={() => descargarWord(`semanal-${desde}-a-${hasta}`, `Reporte Semanal · ${fmtFecha(desde)} a ${fmtFecha(hasta)}`, texto + (ia ? "\n\n— RESUMEN EJECUTIVO IA —\n" + ia : ""))} style={{ flex:1, background:"#2b579a", color:"#fff", padding:12, fontSize:13 }}>📄 Word</button>
+            <button className="btn" onClick={() => {
+              // Hoja 1: Resumen global
+              const hojas = [{
+                nombre: "Resumen",
+                headers: ["Métrica","Valor"],
+                rows: [
+                  { Métrica:"Periodo", Valor: `${desde} a ${hasta}` },
+                  { Métrica:"Obras visitadas", Valor: obrasIds.length },
+                  { Métrica:"Total visitas", Valor: totalVisitas },
+                  { Métrica:"Obras en rojo", Valor: obrasRojas },
+                  { Métrica:"Obras en ámbar", Valor: obrasAmbar },
+                  { Métrica:"Incidencias críticas", Valor: incCriticas },
+                  { Métrica:"Decisiones pendientes", Valor: decPend },
+                ]
+              }, {
+                nombre: "Por obra",
+                headers: ["Obra","Cliente","Visitas","Estado","Días apertura","Última nota"],
+                rows: obrasIds.map(oid => {
+                  const o = obras.find(x => x.id === oid);
+                  const obraReps = reps.filter(r => r.obraId === oid).sort((a,b) => b.fecha.localeCompare(a.fecha));
+                  const ult = obraReps[0];
+                  const d = diasPara(o?.fechaApertura);
+                  return { Obra: o?.nombre, Cliente: o?.cliente, Visitas: obraReps.length, Estado: ult?.alerta || "—", "Días apertura": d != null ? d : "—", "Última nota": (ult?.resumen || ult?.avanceNota || "").slice(0,200) };
+                })
+              }];
+              descargarExcelXML(`semanal-${desde}-a-${hasta}`, hojas);
+            }} style={{ flex:1, background:"#107c41", color:"#fff", padding:12, fontSize:13 }}>📊 Excel</button>
+          </div>
           <MailActions to={cfg.emailJefa} subject={`[GLD] Reporte semanal — ${desde} a ${hasta}`} body={texto + (ia ? "\n\n— RESUMEN IA —\n" + ia : "")} />
         </div>
       </div>
@@ -3781,20 +4011,81 @@ function SemanalView({ obras, visitas, crono, incidencias, decisiones, cfg, apiK
 }
 
 /* ============================ COPILOTO IA (chat) ============================ */
-function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro=[], apiKey }) {
-  const [msgs, setMsgs] = useState([{ role:"assistant", content:"Hola Renzo. Soy tu copiloto de supervisión. Preguntame por el estado de tus obras, tardanzas, incidencias, decisiones o qué priorizar." }]);
+// Prompts contextuales por pantalla — el copiloto adapta los quick-buttons según dónde estés
+function getContextualPrompts(contextKey) {
+  const C = {
+    inicio: [
+      "¿Qué obras están en rojo?",
+      "Prioridades para mañana",
+      "Resumen de tardanzas de la semana",
+      "¿Qué obras tienen apertura en <14 días?",
+    ],
+    visita: [
+      "Resumir esta visita en 5 líneas",
+      "Generar reporte WhatsApp post-supervisión",
+      "Análisis crítico vs cronograma",
+      "Plan del día siguiente",
+      "Detectar patrones cruzando con visitas pasadas",
+    ],
+    obra: [
+      "Estado general de esta obra",
+      "Riesgos a la fecha de apertura",
+      "Patrones de últimas 5 visitas",
+      "Qué priorizar esta semana",
+    ],
+    crono: [
+      "Plan del día desde el cronograma adjunto",
+      "Plan semanal (viernes)",
+      "Qué partidas están atrasadas",
+      "Restricciones críticas",
+    ],
+    reportes: [
+      "Resumen ejecutivo de esta semana",
+      "Versión Jefatura del último reporte",
+      "Mejorar redacción de este texto",
+    ],
+    incidencias: [
+      "Informe ejecutivo compacto de la incidencia",
+      "Causa raíz probable",
+      "Acción correctiva inmediata",
+    ],
+    cerebro: [
+      "Generar checklist de liberación para [partida]",
+      "Extraer criterios técnicos de este texto",
+      "Qué entradas faltan para X categoría",
+    ],
+    general: [
+      "¿Qué obras están en rojo?",
+      "Resume las tardanzas de la semana",
+      "Prioridades para mañana",
+    ],
+  };
+  return C[contextKey] || C.general;
+}
+
+function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro=[], apiKey, contextKey="general", contextData=null, onContextAction }) {
+  const promptsContextuales = getContextualPrompts(contextKey);
+  const [msgs, setMsgs] = useState([{
+    role:"assistant",
+    content: contextKey === "general"
+      ? "Hola Renzo. Soy tu copiloto. Preguntame por el estado de tus obras, tardanzas, prioridades o pedime que genere reportes / análisis / planes."
+      : `Estás en ${contextKey === "visita" ? "una visita" : contextKey === "obra" ? "una obra" : contextKey}. Acá abajo tenés acciones rápidas, o preguntame lo que necesités.`
+  }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const endRef = useRef(null);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior:"smooth" }); }, [msgs, loading]);
-  const sugeridas = ["¿Qué obras están en rojo?", "Resume las tardanzas de la semana", "¿Qué decisiones están pendientes de pago?", "Prioridades para mañana"];
   const send = async (q) => {
     const p = (q ?? input).trim(); if (!p || loading) return;
     setInput(""); const disp = [...msgs, { role:"user", content:p }]; setMsgs(disp); setLoading(true);
-    const ctx = JSON.stringify({ obras, visitas: visitas.map(({fotos,...r}) => r), notas, incidencias, decisiones, crono });
+    // Contexto base + contextData específico de la pantalla
+    const baseCtx = { obras: obras?.length ? obras : [], visitas: (visitas||[]).map(({fotos,fachadaFotos,eppFotos,procesosFotos,avancePartidas,...r}) => r).slice(0,15), notas: notas||[], incidencias: incidencias||[], decisiones: decisiones||[], crono: crono||{} };
+    const ctx = JSON.stringify(baseCtx);
+    const ctxSpecific = contextData ? `\n\nDATOS ESPECÍFICOS DE LA PANTALLA ACTUAL (${contextKey}):\n${JSON.stringify(contextData).slice(0, 8000)}` : "";
     const cb = cerebroContexto(cerebro, p);
-    const call = [{ role:"user", content: `Eres el copiloto de Renzo Moscol (Supervisor de Producción, GLD, fit-out retail Aruma/Platanitos en Perú). Respondé en español, técnico, directo y conciso. Usá SOLO estos datos; si falta info decilo.${cb ? "\n\nCONOCIMIENTO DEL CEREBRO DE RENZO (criterios técnicos guardados):\n"+cb : ""}\n\nDATOS DE OBRAS (JSON):\n${ctx}` }, { role:"assistant", content:"Listo, tengo el contexto de tus obras y de tu cerebro. ¿Qué necesitás?" }, ...disp];
-    const t = await askClaude(call, apiKey);
+    const sys = `Eres el copiloto de Renzo Moscol (Supervisor de Producción GLD, fit-out retail Aruma/Platanitos en Perú). Respondé en español, técnico, directo y conciso (sin floreo, sin 'antecedentes' largos, solo lo justo y necesario). Usá los datos provistos. Si la pregunta es de generar un reporte/plan/análisis, devolvé el texto listo para enviar. Si es exploratoria, respondé con bullets breves.${cb ? "\n\nCONOCIMIENTO DEL CEREBRO:\n"+cb : ""}\n\nCONTEXTO GLOBAL:\n${ctx}${ctxSpecific}`;
+    const call = [{ role:"user", content: sys }, { role:"assistant", content:"Listo, tengo el contexto. ¿Qué necesitás?" }, ...disp];
+    const t = await askClaude(call, apiKey, 2000);
     setMsgs([...disp, { role:"assistant", content: t }]); setLoading(false);
   };
   return (
@@ -3802,20 +4093,23 @@ function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro
       <div style={{ flex:1, overflowY:"auto", padding:14 }}>
         {msgs.map((m, i) => (
           <div key={i} style={{ display:"flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", marginBottom:10 }}>
-            <div style={{ maxWidth:"85%", padding:"10px 13px", borderRadius:14, fontSize:14, lineHeight:1.5, whiteSpace:"pre-wrap", background: m.role === "user" ? "var(--accent)" : "var(--paper)", color: m.role === "user" ? "#fff" : "var(--ink)", border: m.role === "user" ? "none" : "1px solid var(--line)" }}>{m.content}</div>
+            <div style={{ maxWidth:"88%", padding:"10px 13px", borderRadius:14, fontSize:14, lineHeight:1.5, whiteSpace:"pre-wrap", background: m.role === "user" ? "var(--accent)" : "var(--surface2)", color: m.role === "user" ? "#fff" : "var(--ink)", border: m.role === "user" ? "none" : "1px solid var(--border)" }}>{m.content}</div>
           </div>
         ))}
         {loading && <div style={{ display:"flex", gap:4, padding:"6px 4px" }}><span className="dot" /><span className="dot" /><span className="dot" /></div>}
         {msgs.length <= 1 && (
-          <div style={{ display:"flex", flexWrap:"wrap", gap:7, marginTop:8 }}>
-            {sugeridas.map(s => <button key={s} className="btn" onClick={() => send(s)} style={{ fontSize:12.5, padding:"7px 11px", background:"rgba(95,61,196,.08)", color:"var(--ia)", border:"1px solid var(--ia)", fontWeight:600 }}>{s}</button>)}
-          </div>
+          <>
+            <div className="lbl" style={{ marginTop:10, marginBottom:8, color:"var(--ia)" }}>⚡ Acciones rápidas{contextKey !== "general" ? ` (${contextKey})` : ""}</div>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+              {promptsContextuales.map(s => <button key={s} className="btn" onClick={() => send(s)} style={{ fontSize:12, padding:"7px 11px", background:"rgba(167,139,250,.08)", color:"var(--ia)", border:"1px solid var(--ia)", fontWeight:500 }}>{s}</button>)}
+            </div>
+          </>
         )}
         <div ref={endRef} />
       </div>
-      <div style={{ display:"flex", gap:8, padding:12, borderTop:"1px solid var(--line)", background:"var(--paper)" }}>
-        <input className="inp" placeholder="Pregunta sobre tus obras…" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") send(); }} />
-        <button className="btn" onClick={() => send()} disabled={loading} style={{ background:"var(--ia)", color:"#fff", padding:"0 16px" }}><Send size={18} /></button>
+      <div style={{ display:"flex", gap:8, padding:12, borderTop:"1px solid var(--border)", background:"var(--surface)" }}>
+        <input className="inp" placeholder="Pregunta o pedí un reporte…" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") send(); }} />
+        <button className="btn" onClick={() => send()} disabled={loading} style={{ background:"linear-gradient(135deg, var(--ia), #c4b5fd)", color:"#fff", padding:"0 16px" }}><Send size={18} /></button>
       </div>
     </div>
   );

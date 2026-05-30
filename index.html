@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0a0d13" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>Arkym Sup · v13.3</title>
-<meta name="version" content="v13.3-notif-avances" />
-<meta name="last-deploy" content="auto-deploy-2026-05-30d" />
+<title>Arkym Sup · v13.4</title>
+<meta name="version" content="v13.4-payloads-claude" />
+<meta name="last-deploy" content="auto-deploy-2026-05-30e" />
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Arkym%20Sup%22%2C%22short_name%22%3A%22Arkym%22%2C%22description%22%3A%22Supervisi%C3%B3n%20de%20producci%C3%B3n%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230a0d13%22%2C%22theme_color%22%3A%22%230a0d13%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520192%2520192%2522%253E%253Crect%2520width%253D%2522192%2522%2520height%253D%2522192%2522%2520rx%253D%252236%2522%2520fill%253D%2522%2523ff6b35%2522%252F%253E%253Ctext%2520x%253D%252296%2522%2520y%253D%2522118%2522%2520text-anchor%253D%2522middle%2522%2520font-family%253D%2522system-ui%2522%2520font-weight%253D%2522bold%2522%2520font-size%253D%252264%2522%2520fill%253D%2522%25230a0d13%2522%253EAS%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%23ff6b35'/%3E%3Ctext x='96' y='118' text-anchor='middle' font-family='system-ui' font-weight='bold' font-size='64' fill='%230a0d13'%3EAS%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1712,9 +1712,10 @@ const empresaPorCliente = (cliente) => {
   if (cliente === "Aruma") return "RAD 415";
   return "Otra";
 };
-function ObrasScreen({ obras, save, onAbrirNota }) {
+function ObrasScreen({ obras, save, onAbrirNota, crono={}, cfg={} }) {
   const [ed, setEd] = useState(null);
-  const blank = { id: uid(), nombre:"", cliente:"Aruma", empresa:"RAD 415", direccion:"", m2:"", residente:"", pdr:"", horaInicio:"08:00", fechaInicio: hoy(), fechaApertura:"", etapa:"", arqCliente:"" };
+  const [payloadConfig, setPayloadConfig] = useState(null);
+  const blank = { id: uid(), nombre:"", cliente:"Aruma", empresa:"RAD 415", direccion:"", m2:"", residente:"", pdr:"", horaInicio:"08:00", fechaInicio: hoy(), fechaApertura:"", etapa:"", arqCliente:"", distrito:"", ciudad:"Lima", ruc:"", presupuesto:0 };
   const commit = () => { if (!ed.nombre.trim()) return alert("Ponle nombre."); const ex = obras.find(o=>o.id===ed.id); save(ex ? obras.map(o=>o.id===ed.id?ed:o) : [...obras, ed]); setEd(null); };
   if (ed) return (
     <div style={{ padding:14, paddingBottom:110 }}>
@@ -1767,6 +1768,7 @@ function ObrasScreen({ obras, save, onAbrirNota }) {
             </div>
             <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
               {onAbrirNota && <button className="btn" onClick={()=>onAbrirNota(o.id)} style={{ background:"var(--ia)", color:"#fff", padding:7 }} title="Anotar pendiente"><MessageSquare size={14} /></button>}
+              <button className="btn" onClick={()=>setPayloadConfig({ obra: o })} style={{ background:"var(--cyan)", color:"#0a0d13", padding:7 }} title="Generar JSON config para Claude"><Sparkles size={14} /></button>
               <button className="btn" onClick={()=>setEd(o)} style={{ background:"var(--surface2)", color:"var(--ink)", padding:7 }}><Settings size={14} /></button>
               <button className="btn" onClick={()=>{ if (confirm("¿Eliminar tienda?")) save(obras.filter(x=>x.id!==o.id)); }} style={{ background:"transparent", padding:7 }}><Trash2 size={14} color="var(--rojo)" /></button>
             </div>
@@ -1774,6 +1776,14 @@ function ObrasScreen({ obras, save, onAbrirNota }) {
         </div>
       ); })}
       {!obras.length && <div style={{ textAlign:"center", color:"var(--ink2)", marginTop:30 }}>Aún no hay tiendas. Pulsá "Nueva tienda".</div>}
+      <ClaudePayloadModal
+        open={!!payloadConfig}
+        onClose={() => setPayloadConfig(null)}
+        titulo={"📋 config_obra — " + (payloadConfig?.obra?.nombre || "")}
+        payload={payloadConfig ? armarConfigObraJSON(payloadConfig.obra, crono[payloadConfig.obra.id] || [], cfg) : {}}
+        instruccion={INSTRUCCION_CLAUDE_CONFIG}
+        filename={"config_obra_" + (payloadConfig?.obra?.id || "obra")}
+      />
     </div>
   );
 }
@@ -2058,6 +2068,217 @@ function ConfigScreen({ cfg, save, reload }) {
         </div>
       </Section>
     </div>
+  );
+}
+
+/* ============================ PAYLOADS PARA CLAUDE.AI (RDO / RI / RSO / config_obra) ============================
+   Estos helpers arman objetos JSON con la estructura exacta de la especificación v1.0.
+   El supervisor pega el JSON en claude.ai con el prompt indicado y Claude genera el reporte.
+*/
+const COSTOS_HH_DEFAULT = { capataz: 34.07, operario: 28.38, oficial: 22.32, peon: 20.22 };
+const CHECKLIST_SSOMA_DEFAULT = [
+  "Charla de seguridad de 5 min",
+  "EPP completo y en buen estado",
+  "Señalización y delimitación de áreas",
+  "Orden y limpieza en frentes",
+  "Herramientas inspeccionadas",
+  "Extintores operativos",
+  "Botiquín equipado",
+  "ATS/AST llenado",
+  "Accesos y vías libres",
+  "Trabajos en altura con arnés y línea de vida",
+];
+function _obraSlug(obra) {
+  if (!obra) return "obra";
+  const base = (obra.nombre || "obra").toString().toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return base.slice(0, 30) || "obra";
+}
+function _calcCriticidad(prob, sev) {
+  const map = { Baja:1, Media:2, Alta:3 };
+  const score = (map[prob]||1) * (map[sev]||1);
+  if (score >= 6) return "ALTA";
+  if (score >= 3) return "MEDIA";
+  return "BAJA";
+}
+// === CONFIG OBRA ===
+function armarConfigObraJSON(obra, cronoObra=[], cfg={}) {
+  const partidas = (cronoObra||[]).filter(r => r.partida).map((r, i) => ({
+    partida_id: r.id ? "P" + String(i+1).padStart(2,"0") : "P" + String(i+1).padStart(2,"0"),
+    nombre: r.partida,
+    unidad: r.unidad || "m2",
+    metrado_total: +r.metrado || 0,
+    precio_unitario: +r.precioUnit || 0,
+  }));
+  return {
+    tipo_reporte: "config_obra",
+    obra_id: obra?.id || _obraSlug(obra),
+    obra_nombre: obra?.nombre || "",
+    direccion: obra?.direccion || "",
+    distrito: obra?.distrito || "",
+    ciudad: obra?.ciudad || "Lima",
+    cliente: obra?.cliente || "",
+    contratista: obra?.empresa || "",
+    ruc_contratista: obra?.ruc || "",
+    jefe_operaciones: cfg.supervisor || "Renzo Moscol",
+    residente: obra?.residente || "",
+    supervisor_cliente: obra?.arqCliente || "",
+    fecha_inicio: obra?.fechaInicio || "",
+    fecha_fin_contractual: obra?.fechaApertura || "",
+    presupuesto_total: +obra?.presupuesto || 0,
+    costos_hh: { ...COSTOS_HH_DEFAULT },
+    partidas_catalogo: partidas,
+    plan_avance: (cronoObra||[]).filter(r => r.fin).map(r => ({ fecha: r.fin, avance_planificado_pct: +r.avance || 0 })).sort((a,b)=> a.fecha.localeCompare(b.fecha)),
+  };
+}
+// === REPORTE DIARIO (RDO) ===
+function armarReporteDiarioJSON(visita, obra, cronoObra=[], cfg={}, visitasObra=[]) {
+  // Correlativo: posición de esta visita en el orden cronológico de visitas de la obra
+  const ordenadas = (visitasObra||[]).filter(v => v.obraId === visita.obraId).sort((a,b) => a.fecha.localeCompare(b.fecha));
+  const rdoNumero = ordenadas.findIndex(v => v.id === visita.id) + 1 || ordenadas.length + 1;
+  // Personal: sumar cuadrillas. Si no hay segmentación por categoría, marcar todo en "operario".
+  const cuadrilla = { horas_jornada: 8.5, capataz: 0, operario: 0, oficial: 0, peon: 0 };
+  (visita.cuadrillas || []).forEach(c => {
+    const cat = ((c.categoria || c.frente || "")).toLowerCase();
+    const n = +c.personas || 0;
+    if (cat.includes("capataz")) cuadrilla.capataz += n;
+    else if (cat.includes("oficial")) cuadrilla.oficial += n;
+    else if (cat.includes("peon") || cat.includes("peón")) cuadrilla.peon += n;
+    else cuadrilla.operario += n;
+  });
+  // Avance partidas: mapear avancePartidas de la visita o usar el crono
+  const partidasCat = (cronoObra||[]).filter(r => r.partida).map((r, i) => ({ id: r.id, pid: "P" + String(i+1).padStart(2,"0"), nombre: r.partida }));
+  const avancePart = partidasCat.map(p => ({
+    partida_id: p.pid,
+    programado_dia: 0,
+    ejecutado_dia: 0,
+    acumulado: 0,
+  }));
+  // Si la visita tiene avancePartidas (legacy), agregar notas
+  // Si no, dejar en 0 para que el supervisor edite el JSON
+  // Materiales y equipos: vacíos por defecto
+  const materiales = visita.materialesRDO || [];
+  const equipos = visita.equiposRDO || [];
+  // Checklist SSOMA: del visita.checkSeguridad si existe, sino lista default vacía
+  const checklist = CHECKLIST_SSOMA_DEFAULT.map(item => ({ item, cumple: !!(visita.checkSeguridad||{})[item.toLowerCase().replace(/\s+/g,'_')], observacion: "" }));
+  // Fotos: convertir todas a {titulo, imagen}
+  const fotos = [];
+  (visita.fachadaFotos||[]).forEach(f => fotos.push({ titulo: "Fachada" + (f.cap?" — "+f.cap:""), imagen: f.data }));
+  (visita.eppFotos||[]).forEach(f => fotos.push({ titulo: "EPP" + (f.cap?" — "+f.cap:""), imagen: f.data }));
+  (visita.procesosFotos||[]).forEach(f => fotos.push({ titulo: "Procesos" + (f.cap?" — "+f.cap:""), imagen: f.data }));
+  (visita.fotos||[]).forEach(f => fotos.push({ titulo: f.cap || "General", imagen: f.data }));
+  return {
+    tipo_reporte: "reporte_diario",
+    obra_id: obra?.id || _obraSlug(obra),
+    rdo_numero: rdoNumero,
+    fecha: visita.fecha,
+    clima: visita.clima || "",
+    temperatura_c: +visita.temperatura || null,
+    jornada_inicio: visita.jornadaInicio || obra?.horaInicio || "08:00",
+    jornada_fin: visita.jornadaFin || "17:00",
+    estado_dia: visita.alerta === "Rojo" ? "Crítico · atrasado" : visita.alerta === "Ámbar" ? "En avance · leve atraso" : "En avance · al día",
+    cuadrilla,
+    avance_partidas: avancePart,
+    comentario_avance: visita.avanceNota || visita.resumen || "",
+    materiales,
+    equipos,
+    ssoma: { charla_asistentes: cuadrilla.capataz + cuadrilla.operario + cuadrilla.oficial + cuadrilla.peon, checklist },
+    incidencias_dia: (visita.incidencias||[]).length,
+    observaciones: visita.requerimientos || visita.coordCliente || "",
+    fotos,
+  };
+}
+// === REPORTE DE INCIDENCIA (RI) ===
+function armarReporteIncidenciaJSON(inc, obra, cfg={}, incidenciasObra=[]) {
+  const orden = (incidenciasObra||[]).filter(x => x.obraId === inc.obraId).sort((a,b) => (a.fecha+a.id).localeCompare(b.fecha+b.id));
+  const incNumero = orden.findIndex(x => x.id === inc.id) + 1 || orden.length + 1;
+  const probabilidad = inc.probabilidad || (inc.sev === "Alta" ? "Media" : "Baja");
+  const severidad = inc.sev || "Baja";
+  return {
+    tipo_reporte: "reporte_incidencia",
+    obra_id: obra?.id || _obraSlug(obra),
+    inc_numero: incNumero,
+    fecha: inc.fecha,
+    hora: inc.hora || "",
+    tipo: inc.tipo || "Otro",
+    subtipo: inc.subtipo || "",
+    rdo_vinculado: inc.repId ? "RDO-" + _obraSlug(obra) + "-" + (inc.repId.slice(-3)) : "",
+    reportado_por: inc.reportadoPor || cfg.supervisor || "",
+    ubicacion: inc.ubicacion || "",
+    detuvo_trabajos: !!inc.detuvoTrabajos,
+    tiempo_detencion_min: +inc.tiempoDetencion || 0,
+    lesionados: +inc.lesionados || 0,
+    lesionados_detalle: inc.lesionadosDetalle || "",
+    dano_material: inc.danoMaterial || "Ninguno",
+    descripcion: inc.desc || "",
+    probabilidad,
+    severidad,
+    criticidad: inc.criticidad || _calcCriticidad(probabilidad, severidad),
+    causa_raiz: { porques: inc.porques || [], raiz: inc.causaRaiz || "" },
+    acciones: inc.acciones && inc.acciones.length ? inc.acciones : [
+      { tipo: "Inmediata",  accion: inc.accion || "", responsable: cfg.supervisor || "", plazo: inc.fecha, estado: inc.estado || "En proceso" },
+    ],
+    impacto: {
+      tiempo_perdido: inc.tiempoPerdido || ((+inc.tiempoDetencion||0) ? (inc.tiempoDetencion + " min") : ""),
+      costo_estimado: +inc.costoEstimado || 0,
+      afecta_cronograma: !!inc.afectaCronograma,
+      afecta_calidad: !!inc.afectaCalidad,
+    },
+    fotos: (inc.fotos||[]).map(f => ({ titulo: f.cap || "Evidencia", imagen: f.data })),
+  };
+}
+// === REPORTE SEMANAL (RSO) ===
+function armarReporteSemanalJSON(obra, cronoObra, visitasSemana, incidenciasSemana, cfg, planLookahead, conclusiones, periodo) {
+  const semana_numero = periodo?.semanaNumero || 1;
+  return {
+    tipo_reporte: "reporte_semanal",
+    obra_id: obra?.id || _obraSlug(obra),
+    semana_numero,
+    periodo_inicio: periodo?.desde || "",
+    periodo_fin: periodo?.hasta || "",
+    rdo_incluidos: (visitasSemana||[]).map((v,i) => "RDO-" + _obraSlug(obra) + "-" + String((i+1)).padStart(3,"0")),
+    reportes_diarios: (visitasSemana||[]).map(v => armarReporteDiarioJSON(v, obra, cronoObra, cfg, visitasSemana)),
+    incidencias_semana: (incidenciasSemana||[]).map(i => armarReporteIncidenciaJSON(i, obra, cfg, incidenciasSemana)),
+    planificacion_proxima: planLookahead || [],
+    conclusiones: conclusiones || [],
+    estado_semana: "",
+  };
+}
+
+const INSTRUCCION_CLAUDE_RDO = "Pegá este JSON en claude.ai con el prompt:\n\n> Generame el REPORTE DIARIO DE OBRA (RDO) en formato HTML imprimible (estilo prototipo Tienda Mass). Usá este JSON como datos de entrada y dejame en blanco lo que falte.";
+const INSTRUCCION_CLAUDE_RI = "Pegá este JSON en claude.ai con el prompt:\n\n> Generame el REPORTE DE INCIDENCIAS en formato HTML imprimible (estilo prototipo). Calculá criticidad por matriz prob×sev si no viene.";
+const INSTRUCCION_CLAUDE_RSO = "Pegá este JSON en claude.ai con el prompt:\n\n> Generame el REPORTE SEMANAL · DASHBOARD DE OBRA en formato HTML imprimible (estilo prototipo). Calculá SPI, CPI, avance acumulado, curva S, HH por día y costos a partir de reportes_diarios + config_obra.";
+const INSTRUCCION_CLAUDE_CONFIG = "Pegá este JSON en claude.ai una sola vez por obra. Decile:\n\n> Guardá este config_obra como base para futuros reportes (curva S, SPI, partidas catálogo).";
+
+// === MODAL UNIVERSAL para mostrar el JSON y copiarlo ===
+function ClaudePayloadModal({ open, onClose, titulo, payload, instruccion, filename }) {
+  const [copiado, setCopiado] = useState(false);
+  if (!open) return null;
+  const jsonStr = JSON.stringify(payload, null, 2);
+  const copiar = async () => {
+    try { await navigator.clipboard.writeText(jsonStr); setCopiado(true); setTimeout(()=>setCopiado(false), 2200); }
+    catch { alert("No se pudo copiar. Tocá el área del JSON, mantené pulsado y seleccioná Copiar."); }
+  };
+  const descargar = () => {
+    try {
+      const blob = new Blob([jsonStr], { type:"application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = (filename || "payload") + ".json";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 800);
+    } catch (e) { alert("Error al descargar: " + e.message); }
+  };
+  return (
+    <Modal open={open} onClose={onClose} title={titulo} maxWidth={700}>
+      <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5, padding:10, background:"var(--surface)", borderRadius:8, border:"1px solid var(--border-soft)", whiteSpace:"pre-wrap" }}>{instruccion}</div>
+      <div style={{ display:"flex", gap:7, marginBottom:9 }}>
+        <button onClick={copiar} className="btn" style={{ flex:2, background: copiado ? "var(--verde)" : "linear-gradient(135deg, var(--accent), #ff8855)", color:"#fff", padding:12, fontSize:13, fontWeight:600 }}>{copiado ? "✓ JSON copiado" : "📋 Copiar JSON al portapapeles"}</button>
+        <button onClick={descargar} className="btn" style={{ flex:1, background:"var(--surface3)", color:"var(--ink)", padding:12, fontSize:13 }}>💾 .json</button>
+        <a href="https://claude.ai/new" target="_blank" rel="noreferrer" className="btn" style={{ flex:1, background:"var(--ia)", color:"#fff", padding:12, fontSize:13, textAlign:"center", textDecoration:"none" }}>🤖 Claude.ai</a>
+      </div>
+      <pre className="mono" style={{ background:"var(--bg)", padding:11, borderRadius:8, fontSize:11, maxHeight:"45vh", overflow:"auto", whiteSpace:"pre-wrap", wordBreak:"break-all", color:"var(--ink)", border:"1px solid var(--border)", lineHeight:1.4 }}>{jsonStr}</pre>
+      <div style={{ fontSize:11, color:"var(--ink3)", marginTop:9, lineHeight:1.45 }}>💡 Pesa {(jsonStr.length/1024).toFixed(1)} KB. Si tiene muchas fotos podés descargar el .json y adjuntarlo en Claude.</div>
+    </Modal>
   );
 }
 
@@ -2353,7 +2574,7 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
         <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:11, color:"#0a0d13", letterSpacing:"-.04em" }}>AS</div>
         <div style={{ flex:1 }}>
           <div className="disp" style={{ fontSize:14, lineHeight:1.1 }}>Arkym Sup</div>
-          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.3</div>
+          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.4</div>
         </div>
         <button onClick={onClose} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:7, padding:5, cursor:"pointer", color:"var(--ink2)", display:"flex", alignItems:"center" }} className="gld-sidebar-close" title="Cerrar menú"><X size={15} /></button>
       </div>
@@ -2630,7 +2851,7 @@ function App() {
   else if (tab === "obra") body = <ObraHub obras={obras} obraId={selObra} setObraId={setSelObra} calidad={calidad} plan={plan} crono={crono} visitas={visitas} saveCal={saveCal} savePlan={savePlan} saveCrono={saveCrono} entregas={entregas} saveEntrega={saveEntrega} partidas={partidas} savePartida={savePartida} incidencias={incidencias} decisiones={decisiones} notas={notas} cronoDocs={cronoDocs} saveCronoDoc={saveCronoDoc} cerebro={cerebro} apiKey={cfg.anthKey} savePlanDiario={savePlanDiario} onUpdateVisita={async(v) => { const all = visitas.map(x => x.id === v.id ? v : x); setVisitas(all); await store.set("visitas", all); }} planosIdx={planosIdx} loadPlano={loadPlano} savePlano={savePlano} delPlano={delPlano} zonas={zonas} saveZonas={saveZonas} />;
   else if (tab === "cumplimiento") body = <CumplimientoScreen obras={obras} planesDiarios={planesDiarios} togglePlanItem={togglePlanItem} />;
   else if (tab === "reportes") body = <ReportesScreen obras={obras} visitas={visitas} incidencias={incidencias} decisiones={decisiones} saveIncidencias={saveIncidencias} cfg={cfg} crono={crono} saveVisita={async(v)=>{ const others=visitas.filter(x=>x.id!==v.id); const all=[...others,v]; setVisitas(all); await store.set("visitas", all); }} delVisita={async(id)=>{ const ni=visitas.filter(v=>v.id!==id); setVisitas(ni); await store.set("visitas", ni); const ic=incidencias.filter(x=>x.repId!==id); setIncidencias(ic); await store.set("incidencias", ic); }} apiKey={cfg.anthKey} zonas={zonas} cerebro={cerebro} />;
-  else if (tab === "obras") body = <ObrasScreen obras={obras} save={saveObras} onAbrirNota={(id)=>setQuickNota({ open:true, obraId:id })} />;
+  else if (tab === "obras") body = <ObrasScreen obras={obras} save={saveObras} onAbrirNota={(id)=>setQuickNota({ open:true, obraId:id })} crono={crono} cfg={cfg} />;
   else if (tab === "notas") body = <NotasScreen obras={obras} notas={notas} save={saveNotas} />;
   else if (tab === "incidencias") body = <IncidenciasScreen obras={obras} incidencias={incidencias} save={saveIncidencias} cfg={cfg} cerebro={cerebro} apiKey={cfg.anthKey} />;
   else if (tab === "ia") {
@@ -3994,6 +4215,7 @@ function IncidenciasScreen({ obras, incidencias, save, cfg, cerebro=[], apiKey }
   const [verReporte, setVerReporte] = useState(null);
   const [reporteLoad, setReporteLoad] = useState(false);
   const [reporteIA, setReporteIA] = useState("");
+  const [payloadRI, setPayloadRI] = useState(null);
   const generarReporte = async (inc) => {
     if (!apiKey) return alert("Activá la IA primero (Ajustes → API key).");
     setReporteLoad(true); setReporteIA(""); setVerReporte(inc);
@@ -4062,11 +4284,20 @@ Reglas: sé compacto. Cada línea importa. No repitas info entre secciones. No a
           {x.accion && <div style={{ fontSize:13, color:"var(--ink2)" }}>→ {x.accion}</div>}
           <div style={{ display:"flex", gap:6, marginTop:8 }}>
             <button className="btn" onClick={() => generarReporte(x)} style={{ flex:1, padding:8, fontSize:12, background:"linear-gradient(135deg, var(--ia), #c4b5fd)", color:"#fff" }}><Sparkles size={13} style={{verticalAlign:-2}} /> Informe IA</button>
+            <button className="btn" onClick={() => setPayloadRI({ inc: x, obra: obras.find(o => o.id === x.obraId) })} style={{ flex:1, padding:8, fontSize:12, background:"var(--cyan)", color:"#0a0d13", fontWeight:600 }}>📋 JSON RI</button>
             <button className="btn" onClick={() => setEstado(x.id, x.estado === "Cerrada" ? "Abierta" : "Cerrada")} style={{ flex:1, padding:8, fontSize:12, background: x.estado === "Cerrada" ? "var(--surface2)" : "var(--verde)", color: x.estado === "Cerrada" ? "var(--ink2)" : "#fff" }}>{x.estado === "Cerrada" ? "Reabrir" : <><CheckCircle2 size={13} style={{verticalAlign:-2}} /> Cerrar</>}</button>
             <button className="btn" onClick={() => { if (confirm("¿Eliminar?")) del(x.id); }} style={{ background:"transparent", padding:8 }}><Trash2 size={16} color="var(--rojo)" /></button>
           </div>
         </div>
       ))}
+      <ClaudePayloadModal
+        open={!!payloadRI}
+        onClose={() => setPayloadRI(null)}
+        titulo={"📋 reporte_incidencia — " + (payloadRI?.obra?.nombre || "")}
+        payload={payloadRI ? armarReporteIncidenciaJSON(payloadRI.inc, payloadRI.obra, cfg, incidencias) : {}}
+        instruccion={INSTRUCCION_CLAUDE_RI}
+        filename={"RI_" + (payloadRI?.obra?.id || "obra") + "_" + (payloadRI?.inc?.fecha || "")}
+      />
       {!lista.length && <div style={{ textAlign:"center", color:"var(--ink2)", marginTop:20 }}>Sin incidencias con este filtro.</div>}
       {lista.length > 0 && <div style={{ marginTop:12 }}><MailActions to={cfg.emailJefa || cfg.emailGerencia} subject={`[GLD] Reporte de incidencias — ${fmtFecha(hoy())}`} body={texto()} /></div>}
       <Modal open={!!verReporte} onClose={() => { setVerReporte(null); setReporteIA(""); }} title="Informe de incidencia (IA)" maxWidth={560}>
@@ -4113,6 +4344,7 @@ function ReportesScreen({ obras, visitas, incidencias, decisiones=[], saveIncide
   const [tab, setTab] = useState("diarios");
   const [mejorado, setMejorado] = useState({ open:false, texto:"", load:false });
   const [iaLoad, setIaLoad] = useState(false);
+  const [payloadRDO, setPayloadRDO] = useState(null);
   const TABS = [["diarios","Diarios"],["semanal","Semanal"],["incid","Incidencias"]];
 
   if (open) {
@@ -4242,7 +4474,8 @@ ${texto}`;
               descargarExcelXML(`reporte-${obra?.nombre?.replace(/\s/g,"_")||"obra"}-${open.fecha}`, [{ nombre:"Reporte", headers, rows }]);
             }} style={{ flex:1, background:"#107c41", color:"#fff", padding:12, fontSize:13 }}>📊 Excel editable</button>
           </div>
-          <MailActions to={cfg.emailJefa || cfg.emailGerencia} subject={`[GLD] Reporte diario — ${obra?.nombre || ""} — ${open.fecha}`} body={texto} />
+          <button onClick={() => setPayloadRDO({ visita: open, obra })} className="btn" style={{ background:"linear-gradient(135deg, var(--cyan), #67e8f9)", color:"#0a0d13", padding:13, width:"100%", marginBottom:8, fontWeight:700, fontSize:13 }}><Sparkles size={14} style={{verticalAlign:-2}} /> 📋 JSON RDO para Claude.ai</button>
+          <MailActions to={cfg.emailJefa || cfg.emailGerencia} subject={`[Arkym] Reporte diario — ${obra?.nombre || ""} — ${open.fecha}`} body={texto} />
         </div>
         <Modal open={mejorado.open} onClose={() => setMejorado({ open:false, texto:"", load:false })} title="✨ Reporte mejorado con IA" maxWidth={620}>
           {mejorado.load && <div style={{ textAlign:"center", padding:30 }}><span className="dot" /><span className="dot" /><span className="dot" /><div style={{ marginTop:10, fontSize:12.5, color:"var(--ink2)" }}>Redactando versión ejecutiva con Claude…</div></div>}
@@ -4258,6 +4491,14 @@ ${texto}`;
             </>
           )}
         </Modal>
+        <ClaudePayloadModal
+          open={!!payloadRDO}
+          onClose={() => setPayloadRDO(null)}
+          titulo={"📋 reporte_diario — " + (payloadRDO?.obra?.nombre || "")}
+          payload={payloadRDO ? armarReporteDiarioJSON(payloadRDO.visita, payloadRDO.obra, crono[payloadRDO.obra.id] || [], cfg, visitas) : {}}
+          instruccion={INSTRUCCION_CLAUDE_RDO}
+          filename={"RDO_" + (payloadRDO?.obra?.id || "obra") + "_" + (payloadRDO?.visita?.fecha || "")}
+        />
       </div>
     );
   }
@@ -4308,6 +4549,8 @@ function SemanalView({ obras, visitas, crono, incidencias, decisiones, cfg, apiK
   const [ia, setIa] = useState("");
   const [iaLoad, setIaLoad] = useState(false);
   const [verPdf, setVerPdf] = useState(false);
+  const [rsoForm, setRsoForm] = useState({ open:false, obraId:"", planText:"", concText:"" });
+  const [payloadRSO, setPayloadRSO] = useState(null);
   const reps = useMemo(() => visitas.filter(v => v.fecha >= desde && v.fecha <= hasta), [visitas, desde, hasta]);
   const obrasIds = [...new Set(reps.map(r => r.obraId))];
   const totalVisitas = reps.length;
@@ -4426,6 +4669,40 @@ function SemanalView({ obras, visitas, crono, incidencias, decisiones, cfg, apiK
           <button className="btn" onClick={() => setVerPdf(true)} style={{ background:"var(--surface3)", color:"var(--ink)", padding:13, width:"100%", marginTop:8 }}><Eye size={15} style={{verticalAlign:-3}} /> Ver PDF formal (dashboard + tabla + resumen)</button>
         </>
       )}
+
+      {/* JSON SEMANAL PARA CLAUDE — por obra */}
+      <div style={{ marginTop:14, padding:11, background:"var(--surface)", borderRadius:8, border:"1px solid var(--cyan)" }}>
+        <div className="lbl" style={{ color:"var(--cyan)", marginBottom:7 }}>📋 JSON Semanal (RSO) para Claude.ai</div>
+        <div style={{ fontSize:12, color:"var(--ink2)", marginBottom:9, lineHeight:1.45 }}>Empaqueta los RDOs + incidencias de la semana en un JSON listo para que Claude genere el dashboard semanal con curva S, SPI, CPI, etc.</div>
+        <Sel value={rsoForm.obraId} onChange={e => setRsoForm({ ...rsoForm, obraId: e.target.value })} options={[{ value:"", label:"— Elegí la obra —" }, ...obrasIds.map(oid => { const o = obras.find(x=>x.id===oid); return { value: oid, label: (o?.cliente || "") + " · " + (o?.nombre || "") }; })]} />
+        {rsoForm.obraId && (
+          <>
+            <div style={{ marginTop:9 }}><label className="lbl">Planificación próxima semana (1 por línea, formato: frente|meta|recurso|responsable|riesgo)</label><TArea value={rsoForm.planText} onChange={e => setRsoForm({ ...rsoForm, planText: e.target.value })} rows={3} placeholder="Piso porcelanato|+18%|Reposición 80 m² (28/05)|Logística|Medio\nInst. eléctricas|+12%|2 operarios certificados|Capataz|Bajo" /></div>
+            <div style={{ marginTop:7 }}><label className="lbl">Conclusiones / alertas (1 por línea)</label><TArea value={rsoForm.concText} onChange={e => setRsoForm({ ...rsoForm, concText: e.target.value })} rows={3} placeholder="Atraso 2.8 puntos por entrega parcial; recuperable la próxima semana.\nCosto bajo control; mano de obra ligeramente por encima.\nSeguridad estable (0 accidentes con baja)." /></div>
+            <button onClick={() => {
+              const obra = obras.find(x => x.id === rsoForm.obraId);
+              const visitasObra = reps.filter(v => v.obraId === rsoForm.obraId).sort((a,b) => a.fecha.localeCompare(b.fecha));
+              const incObra = incidencias.filter(i => i.obraId === rsoForm.obraId && i.fecha >= desde && i.fecha <= hasta);
+              const plan = (rsoForm.planText || "").split(/\n+/).map(l => l.trim()).filter(Boolean).map(l => {
+                const p = l.split("|").map(s => s.trim());
+                return { frente_partida: p[0]||"", meta: p[1]||"", recurso_clave: p[2]||"", responsable: p[3]||"", riesgo: p[4]||"Bajo" };
+              });
+              const conc = (rsoForm.concText || "").split(/\n+/).map(l => l.trim()).filter(Boolean);
+              const semNum = Math.ceil(((new Date(desde) - new Date(desde.slice(0,4) + "-01-01")) / 86400000 + 1) / 7);
+              const json = armarReporteSemanalJSON(obra, crono[obra.id] || [], visitasObra, incObra, cfg, plan, conc, { semanaNumero: semNum, desde, hasta });
+              setPayloadRSO({ json, obra });
+            }} className="btn" style={{ background:"linear-gradient(135deg, var(--cyan), #67e8f9)", color:"#0a0d13", padding:12, width:"100%", marginTop:10, fontWeight:700 }}>📋 Generar JSON Semanal</button>
+          </>
+        )}
+      </div>
+      <ClaudePayloadModal
+        open={!!payloadRSO}
+        onClose={() => setPayloadRSO(null)}
+        titulo={"📋 reporte_semanal — " + (payloadRSO?.obra?.nombre || "")}
+        payload={payloadRSO?.json || {}}
+        instruccion={INSTRUCCION_CLAUDE_RSO}
+        filename={"RSO_" + (payloadRSO?.obra?.id || "obra") + "_" + desde}
+      />
     </Section>
   );
 }

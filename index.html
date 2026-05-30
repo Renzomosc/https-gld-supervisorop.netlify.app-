@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0a0d13" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>Arkym Sup · v13.7</title>
-<meta name="version" content="v13.7-dashboard" />
-<meta name="last-deploy" content="auto-deploy-2026-05-30h" />
+<title>Arkym Sup · v13.8</title>
+<meta name="version" content="v13.8-fases" />
+<meta name="last-deploy" content="auto-deploy-2026-05-30i" />
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Arkym%20Sup%22%2C%22short_name%22%3A%22Arkym%22%2C%22description%22%3A%22Supervisi%C3%B3n%20de%20producci%C3%B3n%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230a0d13%22%2C%22theme_color%22%3A%22%230a0d13%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520192%2520192%2522%253E%253Crect%2520width%253D%2522192%2522%2520height%253D%2522192%2522%2520rx%253D%252236%2522%2520fill%253D%2522%2523ff6b35%2522%252F%253E%253Ctext%2520x%253D%252296%2522%2520y%253D%2522118%2522%2520text-anchor%253D%2522middle%2522%2520font-family%253D%2522system-ui%2522%2520font-weight%253D%2522bold%2522%2520font-size%253D%252264%2522%2520fill%253D%2522%25230a0d13%2522%253EAS%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%23ff6b35'/%3E%3Ctext x='96' y='118' text-anchor='middle' font-family='system-ui' font-weight='bold' font-size='64' fill='%230a0d13'%3EAS%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1730,10 +1730,14 @@ const empresaPorCliente = (cliente) => {
   if (cliente === "Aruma") return "RAD 415";
   return "Otra";
 };
+const TIPOS_OBRA = ["Obra nueva", "Remodelación", "Implementación", "Fit-out por fases", "Otro"];
+const ESTADOS_FASE = ["Pendiente", "En curso", "Liberada", "Bloqueada"];
+const FASE_COL = { "Pendiente":"var(--ink3)", "En curso":"var(--cyan)", "Liberada":"var(--verde)", "Bloqueada":"var(--rojo)" };
+const blankFase = (n=1) => ({ id: uid(), nombre: "Fase " + n, fechaInicio: hoy(), fechaFin: "", estado: "Pendiente", alcance: "", historialFechas: [] });
 function ObrasScreen({ obras, save, onAbrirNota, crono={}, cfg={}, zonas={} }) {
   const [ed, setEd] = useState(null);
   const [payloadConfig, setPayloadConfig] = useState(null);
-  const blank = { id: uid(), nombre:"", cliente:"Aruma", empresa:"RAD 415", direccion:"", m2:"", residente:"", pdr:"", horaInicio:"08:00", fechaInicio: hoy(), fechaApertura:"", etapa:"", arqCliente:"", distrito:"", ciudad:"Lima", ruc:"", presupuesto:0 };
+  const blank = { id: uid(), nombre:"", cliente:"Aruma", empresa:"RAD 415", direccion:"", m2:"", residente:"", pdr:"", horaInicio:"08:00", fechaInicio: hoy(), fechaApertura:"", etapa:"", arqCliente:"", distrito:"", ciudad:"Lima", ruc:"", presupuesto:0, tipoObra:"Remodelación", porFases:false, fases:[] };
   const commit = () => { if (!ed.nombre.trim()) return alert("Ponle nombre."); const ex = obras.find(o=>o.id===ed.id); save(ex ? obras.map(o=>o.id===ed.id?ed:o) : [...obras, ed]); setEd(null); };
   if (ed) return (
     <div style={{ padding:14, paddingBottom:110 }}>
@@ -1759,7 +1763,52 @@ function ObrasScreen({ obras, save, onAbrirNota, crono={}, cfg={}, zonas={} }) {
           <div style={{ flex:1 }}><Field label="Inicio"><TInput type="date" value={ed.fechaInicio} onChange={e=>setEd({...ed, fechaInicio:e.target.value})} /></Field></div>
           <div style={{ flex:1 }}><Field label="Apertura"><TInput type="date" value={ed.fechaApertura} onChange={e=>setEd({...ed, fechaApertura:e.target.value})} /></Field></div>
         </div>
+        <Field label="Tipo de obra"><Sel value={ed.tipoObra || "Remodelación"} onChange={e=>setEd({...ed, tipoObra:e.target.value})} options={TIPOS_OBRA} /></Field>
+        <Toggle label="🧩 Esta obra se entrega por fases" value={!!ed.porFases} onChange={v => {
+          if (v && (!ed.fases || ed.fases.length === 0)) {
+            const raw = prompt("¿Cuántas fases tiene la obra al día de hoy? (podés agregar más después)", "2");
+            if (raw == null) return; // canceló
+            const n = Math.max(1, Math.min(parseInt(raw, 10) || 1, 20));
+            const fs = Array.from({ length: n }, (_, i) => blankFase(i + 1));
+            setEd({ ...ed, porFases: true, fases: fs });
+          } else setEd({ ...ed, porFases: v });
+        }} />
       </Section>
+      {ed.porFases && (
+        <Section title={"🧩 Fases de la obra (" + ((ed.fases||[]).length) + ")"} icon={Layers}>
+          <div style={{ fontSize:12, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>El cliente lanza fases progresivamente. Podés agregar/editar fechas; el historial queda guardado para auditoría.</div>
+          {(ed.fases || []).map((f, i) => {
+            const col = FASE_COL[f.estado] || "var(--ink3)";
+            return (
+              <div key={f.id} className="card" style={{ padding:11, marginBottom:8, background:"var(--surface)", borderLeft:"3px solid " + col }}>
+                <div style={{ display:"flex", gap:6, marginBottom:7, alignItems:"center" }}>
+                  <TInput value={f.nombre} onChange={e => { const nf = [...ed.fases]; nf[i] = { ...f, nombre: e.target.value }; setEd({ ...ed, fases: nf }); }} placeholder="Nombre fase" />
+                  <button className="btn" onClick={() => setEd({ ...ed, fases: ed.fases.filter(x => x.id !== f.id) })} style={{ background:"transparent", padding:6 }}><Trash2 size={14} color="var(--rojo)" /></button>
+                </div>
+                <div style={{ display:"flex", gap:5, marginBottom:6, flexWrap:"wrap" }}>
+                  {ESTADOS_FASE.map(est => (
+                    <button key={est} className="btn" onClick={() => { const nf = [...ed.fases]; nf[i] = { ...f, estado: est }; setEd({ ...ed, fases: nf }); }} style={{ flex:1, padding:"6px 4px", fontSize:11, background: f.estado === est ? FASE_COL[est] : "var(--surface)", color: f.estado === est ? "#0a0d13" : "var(--ink2)", border:"1px solid " + FASE_COL[est] + "55", fontWeight: f.estado === est ? 700 : 500, minWidth:75 }}>{est}</button>
+                  ))}
+                </div>
+                <div style={{ display:"flex", gap:6, marginBottom:6 }}>
+                  <div style={{ flex:1 }}><label className="lbl">Inicio</label><TInput type="date" value={f.fechaInicio} onChange={e => { const nf = [...ed.fases]; const prev = f.fechaInicio; const hist = prev && prev !== e.target.value ? [...(f.historialFechas||[]), { campo:"inicio", antes: prev, nuevo: e.target.value, ts: hoy() }] : (f.historialFechas||[]); nf[i] = { ...f, fechaInicio: e.target.value, historialFechas: hist }; setEd({ ...ed, fases: nf }); }} /></div>
+                  <div style={{ flex:1 }}><label className="lbl">Fin estimado</label><TInput type="date" value={f.fechaFin} onChange={e => { const nf = [...ed.fases]; const prev = f.fechaFin; const hist = prev && prev !== e.target.value ? [...(f.historialFechas||[]), { campo:"fin", antes: prev, nuevo: e.target.value, ts: hoy() }] : (f.historialFechas||[]); nf[i] = { ...f, fechaFin: e.target.value, historialFechas: hist }; setEd({ ...ed, fases: nf }); }} /></div>
+                </div>
+                <TArea value={f.alcance} onChange={e => { const nf = [...ed.fases]; nf[i] = { ...f, alcance: e.target.value }; setEd({ ...ed, fases: nf }); }} rows={2} placeholder="Alcance de la fase (qué partidas/zonas incluye)" />
+                {(f.historialFechas || []).length > 0 && (
+                  <details style={{ marginTop:7, fontSize:11 }}>
+                    <summary style={{ cursor:"pointer", color:"var(--cyan)" }}>📅 Historial de fechas ({f.historialFechas.length})</summary>
+                    <div style={{ marginTop:5 }}>
+                      {f.historialFechas.map((h, hi) => (<div key={hi} className="mono" style={{ fontSize:10.5, color:"var(--ink3)", padding:"2px 0" }}>{h.ts}: {h.campo} {h.antes || "—"} → <b style={{ color:"var(--ink2)" }}>{h.nuevo}</b></div>))}
+                    </div>
+                  </details>
+                )}
+              </div>
+            );
+          })}
+          <button onClick={() => setEd({ ...ed, fases: [...(ed.fases||[]), blankFase((ed.fases||[]).length + 1)] })} className="btn" style={{ background:"var(--surface3)", color:"var(--ink)", padding:10, width:"100%" }}><Plus size={15} style={{verticalAlign:-2}} /> Agregar otra fase</button>
+        </Section>
+      )}
       <div style={{ display:"flex", gap:10 }}>
         <button className="btn" onClick={()=>setEd(null)} style={{ flex:1, background:"var(--surface2)", color:"var(--ink)", padding:14 }}>Cancelar</button>
         <button className="btn" onClick={commit} style={{ flex:2, background:"var(--accent)", color:"#fff", padding:14 }}><Save size={16} style={{verticalAlign:-3}} /> Guardar tienda</button>
@@ -1798,6 +1847,17 @@ function ObrasScreen({ obras, save, onAbrirNota, crono={}, cfg={}, zonas={} }) {
                   </div>
                 );
               })()}
+              {o.porFases && (o.fases || []).length > 0 && (
+                <div style={{ marginTop:8, padding:8, background:"var(--surface)", borderRadius:7, border:"1px solid var(--border-soft)" }}>
+                  <div style={{ fontSize:10.5, fontWeight:600, color:"var(--ink3)", textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{o.fases.length} fases · {o.tipoObra || "—"}</div>
+                  <div style={{ display:"flex", gap:3, flexWrap:"wrap" }}>
+                    {o.fases.map(f => {
+                      const col = FASE_COL[f.estado] || "var(--ink3)";
+                      return <span key={f.id} className="mono" title={f.nombre + " · " + f.estado + (f.fechaFin ? " · fin " + f.fechaFin : "")} style={{ fontSize:10, padding:"2px 7px", borderRadius:99, background: col + "22", color: col, border: "1px solid " + col + "66", fontWeight:600 }}>{f.nombre}</span>;
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
             <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
               {onAbrirNota && <button className="btn" onClick={()=>onAbrirNota(o.id)} style={{ background:"var(--ia)", color:"#fff", padding:7 }} title="Anotar pendiente"><MessageSquare size={14} /></button>}
@@ -2838,7 +2898,7 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
         <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:11, color:"#0a0d13", letterSpacing:"-.04em" }}>AS</div>
         <div style={{ flex:1 }}>
           <div className="disp" style={{ fontSize:14, lineHeight:1.1 }}>Arkym Sup</div>
-          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.7</div>
+          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.8</div>
         </div>
         <button onClick={onClose} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:7, padding:5, cursor:"pointer", color:"var(--ink2)", display:"flex", alignItems:"center" }} className="gld-sidebar-close" title="Cerrar menú"><X size={15} /></button>
       </div>

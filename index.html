@@ -6,12 +6,9 @@
 <meta name="theme-color" content="#0a0d13" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>GLD Campo · v15</title>
-<meta name="version" content="v15-sidebar-zonas" />
-<meta name="last-deploy" content="2026-05-29-sidebar" />
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<meta http-equiv="Pragma" content="no-cache" />
-<meta http-equiv="Expires" content="0" />
+<title>GLD Campo · v12</title>
+<meta name="version" content="v12-supabase" />
+<meta name="last-deploy" content="auto-deploy-2026-05-29" />
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22GLD%20Campo%22%2C%22short_name%22%3A%22GLD%22%2C%22description%22%3A%22Supervisi%C3%B3n%20de%20producci%C3%B3n%20GLD%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230a0d13%22%2C%22theme_color%22%3A%22%230a0d13%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520192%2520192%2522%253E%253Crect%2520width%253D%2522192%2522%2520height%253D%2522192%2522%2520rx%253D%252236%2522%2520fill%253D%2522%2523ff6b35%2522%252F%253E%253Ctext%2520x%253D%252296%2522%2520y%253D%2522118%2522%2520text-anchor%253D%2522middle%2522%2520font-family%253D%2522system-ui%2522%2520font-weight%253D%2522bold%2522%2520font-size%253D%252264%2522%2520fill%253D%2522%25230a0d13%2522%253EGLD%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%23ff6b35'/%3E%3Ctext x='96' y='118' text-anchor='middle' font-family='system-ui' font-weight='bold' font-size='64' fill='%230a0d13'%3EGLD%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -73,36 +70,6 @@ input[type="time"]::-webkit-inner-spin-button, input[type="date"]::-webkit-inner
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
 ::-webkit-scrollbar-track{background:transparent}
-
-/* === SIDEBAR LAYOUT === */
-.app-shell{display:flex;min-height:100vh}
-.sidebar{width:240px;flex-shrink:0;background:linear-gradient(180deg,var(--surface2),var(--surface));border-right:1px solid var(--border);position:fixed;top:0;bottom:0;left:0;overflow-y:auto;z-index:50;display:flex;flex-direction:column}
-.sidebar-header{padding:16px 14px 12px;border-bottom:1px solid var(--border)}
-.sidebar-logo{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-.sidebar-logo-box{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#ff9a5b);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#0a0d13;letter-spacing:-.04em}
-.sidebar-brand{font-weight:700;font-size:15px;letter-spacing:-.02em}
-.sidebar-user{font-size:11px;color:var(--ink3);margin-top:6px}
-.sidebar-nav{flex:1;padding:10px 8px;overflow-y:auto}
-.sidebar-group{margin-bottom:14px}
-.sidebar-group-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);padding:6px 10px;margin-bottom:3px}
-.sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;cursor:pointer;color:var(--ink2);font-size:13.5px;font-weight:500;transition:background .12s;border:none;background:transparent;width:100%;text-align:left}
-.sidebar-item:hover{background:var(--surface3);color:var(--ink)}
-.sidebar-item.active{background:linear-gradient(90deg,rgba(255,107,53,.15),rgba(255,107,53,.05));color:var(--accent);font-weight:600;box-shadow:inset 3px 0 0 var(--accent)}
-.sidebar-item .badge{margin-left:auto;background:var(--surface3);color:var(--ink2);font-size:10px;font-weight:600;padding:1px 6px;border-radius:99px;min-width:18px;text-align:center}
-.sidebar-item.active .badge{background:var(--accent);color:#fff}
-.sidebar-footer{padding:10px 14px;border-top:1px solid var(--border);font-size:10.5px;color:var(--ink3)}
-.main-content{margin-left:240px;flex:1;min-width:0;width:calc(100% - 240px);min-height:100vh}
-.sidebar-backdrop{display:none}
-.hamburger{display:none}
-
-/* Mobile: < 768px */
-@media (max-width: 767px) {
-  .sidebar{transform:translateX(-100%);transition:transform .2s ease;box-shadow:8px 0 32px rgba(0,0,0,.6)}
-  .sidebar.open{transform:translateX(0)}
-  .sidebar-backdrop{display:block;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:49;backdrop-filter:blur(2px)}
-  .main-content{margin-left:0;width:100%}
-  .hamburger{display:inline-flex;align-items:center;justify-content:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px;cursor:pointer;color:var(--ink2)}
-}
 @media print{
   body *{visibility:hidden}
   #printzone,#printzone *{visibility:visible}
@@ -162,8 +129,6 @@ const Plus = I(<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="
 const Trash2 = I(<><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></>);
 const Camera = I(<><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></>);
 const X = I(<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>);
-const Menu = I(<><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></>);
-const Cog = I(<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></>);
 const Building2 = I(<><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v8h4"/><path d="M18 9h2a2 2 0 0 1 2 2v11h-4"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></>);
 const Settings = I(<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>);
 const AlertTriangle = I(<><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>);
@@ -2319,35 +2284,29 @@ function App() {
   else if (tab === "agenda") body = <AgendaScreen obras={obras} agenda={agenda} save={saveAgenda} />;
   else if (tab === "personas") body = <PersonasScreen personas={personas} save={savePersonas} />;
 
-  const [sideOpen, setSideOpen] = useState(false);
   return (
-    <div className="gld app-shell">
-      {sideOpen && <div className="sidebar-backdrop hide-print" onClick={() => setSideOpen(false)} />}
-      <div className={"hide-print " + (sideOpen ? "sidebar open" : "sidebar")} style={!sideOpen ? {} : { transform:"translateX(0)" }}>
-        <Sidebar tab={tab} setTab={(t) => { if (t === "visita") setEditVisita(null); setTab(t); }} onClose={() => setSideOpen(false)} cfg={cfg} notas={notas} incidencias={incidencias} obras={obras} />
-      </div>
-      <div className="main-content">
-        <header className="hide-print" style={{ position:"sticky", top:0, zIndex:10, background:"rgba(10,13,19,.85)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", borderBottom:"1px solid var(--border)", padding:"12px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <button className="hamburger" onClick={() => setSideOpen(true)} aria-label="Menú"><Menu size={18} /></button>
-            <div className="disp" style={{ fontSize:17 }}>{titulos[tab] || "GLD Campo"}</div>
-          </div>
-          <div style={{ display:"flex", alignItems:"center", gap:7 }}>
-            {syncStatus.configured && (() => {
-              const c = syncStatus.status === "online" ? "var(--verde)" : syncStatus.status === "syncing" ? "var(--cyan)" : syncStatus.status === "error" ? "var(--rojo)" : "var(--ink3)";
-              const txt = syncStatus.status === "online" ? "Sync ✓" : syncStatus.status === "syncing" ? "Sync…" : syncStatus.status === "error" ? "Sync ⚠" : "Local";
-              return <button onClick={() => { store.pullAll().then(r => { if (r.ok) alert(`Sync OK · ${r.count} claves`); else alert("Error: " + (r.msg || "")); }); }} title={syncStatus.lastSync ? "Última sync: " + new Date(syncStatus.lastSync).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"}) : "Sin sync"} className="mono" style={{ background:"var(--surface2)", border:`1px solid ${c}`, borderRadius:8, padding:"4px 8px", fontSize:10.5, color:c, cursor:"pointer", fontWeight:600, display:"flex", alignItems:"center", gap:4 }}><span style={{ width:6, height:6, borderRadius:99, background:c, boxShadow: syncStatus.status === "syncing" ? `0 0 8px ${c}` : "none" }} />{txt}</button>;
-            })()}
-            <button onClick={()=>setTab("config")} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:8, cursor:"pointer", color:"var(--ink2)", padding:6, display:"flex", alignItems:"center", justifyContent:"center" }}><Cog size={17} /></button>
-          </div>
-        </header>
-        <main style={{ maxWidth:980, margin:"0 auto" }}>{body}</main>
-      </div>
+    <div className="gld" style={{ minHeight:"100vh", maxWidth:520, margin:"0 auto" }}>
+      <header className="hide-print" style={{ position:"sticky", top:0, zIndex:10, background:"rgba(10,13,19,.85)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", borderBottom:"1px solid var(--border)", padding:"14px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          {backTabs.includes(tab) && <button onClick={()=>setTab("mas")} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:8, cursor:"pointer", padding:5, display:"flex", alignItems:"center", justifyContent:"center" }}><ChevronLeft color="var(--ink)" size={18} /></button>}
+          {!backTabs.includes(tab) && <div style={{ width:24, height:24, borderRadius:7, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:11, color:"#0a0d13", letterSpacing:"-.04em" }}>GLD</div>}
+          <div className="disp" style={{ fontSize:17 }}>{titulos[tab] || "GLD Campo"}</div>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:7 }}>
+          {syncStatus.configured && (() => {
+            const c = syncStatus.status === "online" ? "var(--verde)" : syncStatus.status === "syncing" ? "var(--cyan)" : syncStatus.status === "error" ? "var(--rojo)" : "var(--ink3)";
+            const txt = syncStatus.status === "online" ? "Sync ✓" : syncStatus.status === "syncing" ? "Sync…" : syncStatus.status === "error" ? "Sync ⚠" : "Local";
+            return <button onClick={() => { store.pullAll().then(r => { if (r.ok) alert(`Sync OK · ${r.count} claves`); else alert("Error: " + (r.msg || "")); }); }} title={syncStatus.lastSync ? "Última sync: " + new Date(syncStatus.lastSync).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"}) : "Sin sync"} className="mono" style={{ background:"var(--surface2)", border:`1px solid ${c}`, borderRadius:8, padding:"4px 8px", fontSize:10.5, color:c, cursor:"pointer", fontWeight:600, display:"flex", alignItems:"center", gap:4 }}><span style={{ width:6, height:6, borderRadius:99, background:c, boxShadow: syncStatus.status === "syncing" ? `0 0 8px ${c}` : "none" }} />{txt}</button>;
+          })()}
+          <button onClick={()=>setTab("mas")} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:8, cursor:"pointer", color:"var(--ink2)", padding:6, display:"flex", alignItems:"center", justifyContent:"center" }}><Settings size={17} /></button>
+        </div>
+      </header>
+      <main>{body}</main>
       <QuickNotaModal open={quickNota.open} onClose={()=>setQuickNota({ open:false, obraId:"" })} obras={obras} defaultObraId={quickNota.obraId} onSave={(n) => saveNotas([...notas, n])} />
       <AyudaIAModal open={ayudaIA} onClose={()=>setAyudaIA(false)} goCfg={()=>{ setAyudaIA(false); setTab("config"); }} />
       <AprenderCerebroModal open={aprender.open} visita={aprender.visita} obras={obras} cerebro={cerebro} apiKey={cfg.anthKey} onClose={()=>{ setAprender({ open:false, visita:null }); setTab("inicio"); }} onGuardar={async(entradas) => { const nuevos = entradas.map(e => ({ ...e, id: uid(), fecha: hoy() })); const all = [...cerebro, ...nuevos]; setCerebro(all); await store.set("cerebro", all); setAprender({ open:false, visita:null }); setTab("inicio"); alert(`Se agregaron ${nuevos.length} entrada(s) al cerebro.`); }} />
       {/* FABs flotantes — Copiloto IA + Cerebro + Notas */}
-      <div className="hide-print" style={{ position:"fixed", bottom:24, right:14, display:"flex", flexDirection:"column", gap:10, zIndex:9 }}>
+      <div className="hide-print" style={{ position:"fixed", bottom:84, right:14, display:"flex", flexDirection:"column", gap:10, zIndex:9 }}>
         {tab !== "cerebro" && (
           <button onClick={() => setTab("cerebro")} title="Cerebro" style={{ width:48, height:48, borderRadius:99, background:"var(--surface2)", border:"1.5px solid var(--ia)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 4px 16px -4px var(--ia-glow)" }}>
             <span style={{ fontSize:22 }}>🧠</span>
@@ -2366,79 +2325,19 @@ function App() {
           </button>
         )}
       </div>
-    </div>
-  );
-}
-
-/* === SIDEBAR === */
-function Sidebar({ tab, setTab, onClose, cfg, notas=[], incidencias=[], obras=[] }) {
-  const notasPend = notas.filter(n => n.estado === "Pendiente").length;
-  const incAb = incidencias.filter(i => i.estado === "Abierta").length;
-  const alertasObras = obras.filter(o => { const d = diasPara(o.fechaApertura); return d != null && d < 7; }).length;
-  const groups = [
-    {
-      titulo: "Operación",
-      items: [
-        { k:"inicio", l:"Inicio", Ico:Home },
-        { k:"visita", l:"Nueva visita", Ico:ClipboardCheck },
-        { k:"obra", l:"Obras", Ico:BarChart3, badge: alertasObras || null },
-        { k:"plan", l:"Plan IA", Ico:CalendarClock },
-        { k:"reportes", l:"Reportes", Ico:FileText },
-      ]
-    },
-    {
-      titulo: "Seguimiento",
-      items: [
-        { k:"cumplimiento", l:"Cumplimiento día", Ico:CheckCircle2 },
-        { k:"incidencias", l:"Incidencias", Ico:AlertTriangle, badge: incAb || null },
-        { k:"jornada", l:"Jornada WhatsApp", Ico:MessageCircle },
-        { k:"agenda", l:"Mi semana", Ico:CalendarRange },
-      ]
-    },
-    {
-      titulo: "Datos",
-      items: [
-        { k:"obras", l:"Tiendas (CRUD)", Ico:Building2 },
-        { k:"personas", l:"Directorio", Ico:Users },
-      ]
-    },
-    {
-      titulo: "Sistema",
-      items: [
-        { k:"config", l:"Ajustes", Ico:Cog },
-      ]
-    },
-  ];
-  return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        <div className="sidebar-logo">
-          <div className="sidebar-logo-box">GLD</div>
-          <div>
-            <div className="sidebar-brand">Campo</div>
-            <div className="sidebar-user">{cfg?.supervisor || "Renzo Moscol"}</div>
-          </div>
-        </div>
-      </div>
-      <nav className="sidebar-nav">
-        {groups.map((g, gi) => (
-          <div key={gi} className="sidebar-group">
-            <div className="sidebar-group-title">{g.titulo}</div>
-            {g.items.map(it => (
-              <button key={it.k} className={`sidebar-item ${tab === it.k || (it.k === "obra" && tab === "obras") ? "active" : ""}`} onClick={() => { if (it.k === "visita") { setTab("visita"); } else { setTab(it.k); } if (onClose) onClose(); }}>
-                <it.Ico size={16} strokeWidth={2.2} />
-                <span>{it.l}</span>
-                {it.badge != null && it.badge > 0 && <span className="badge">{it.badge}</span>}
-              </button>
-            ))}
-          </div>
-        ))}
+      <nav className="hide-print" style={{ position:"fixed", bottom:0, left:0, right:0, maxWidth:520, margin:"0 auto", background:"rgba(10,13,19,.85)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", display:"flex", padding:"8px 0 10px", borderTop:"1px solid var(--border)" }}>
+        {NAV.map(([k,l,Ico]) => {
+          const active = tab === k;
+          return (
+            <button key={k} onClick={()=>{ if(k==="visita") setEditVisita(null); setTab(k); }} style={{ flex:1, background:"none", border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:4, color: active ? "var(--accent)" : "var(--ink3)", padding:"4px 0", position:"relative" }}>
+              {active && <div style={{ position:"absolute", top:-9, width:32, height:3, background:"var(--accent)", borderRadius:99, boxShadow:"0 0 12px var(--accent-glow)" }} />}
+              <Ico size={20} strokeWidth={active ? 2.4 : 1.8} />
+              <span style={{ fontSize:10, fontWeight: active ? 700 : 600, letterSpacing:"-.02em" }}>{l}</span>
+            </button>
+          );
+        })}
       </nav>
-      <div className="sidebar-footer">
-        <div>GLD · v13</div>
-        <div style={{ marginTop:2, opacity:.7 }}>Supervisión de Producción</div>
-      </div>
-    </aside>
+    </div>
   );
 }
 
@@ -2999,18 +2898,7 @@ function PlanosManager({ obraId, idx=[], loadPlano, save, del }) {
 }
 
 /* ============================ CRONOGRAMA (Gantt simple) ============================ */
-function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas, notas, incidencias, cerebro, apiKey, savePlanDiario, zonasObra=[] }) {
-  // Zona activa: "general" = cronograma de obra completa; "z:<id>" = cronograma de una zona
-  const [zonaSel, setZonaSel] = useState("general");
-  // Filtrar rows por zona (rows sin zonaId van a "general")
-  const rowsFiltradas = rows.filter(r => (zonaSel === "general" ? !r.zonaId : r.zonaId === zonaSel.replace("z:","")));
-  const setRowsZona = (newRows) => {
-    // Mantener rows de OTRAS zonas + reemplazar rows de la zona actual
-    const otrasRows = rows.filter(r => (zonaSel === "general" ? r.zonaId : (r.zonaId !== zonaSel.replace("z:","") && !!r.zonaId !== false)));
-    // simplificar: reemplazo solo las de zona actual
-    const sinEsta = rows.filter(r => (zonaSel === "general" ? !!r.zonaId : r.zonaId !== zonaSel.replace("z:","")));
-    save(obraId, [...sinEsta, ...newRows]);
-  };
+function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas, notas, incidencias, cerebro, apiKey, savePlanDiario }) {
   const [planOut, setPlanOut] = useState("");
   const [planLoad, setPlanLoad] = useState(false);
   const [planTipo, setPlanTipo] = useState("");
@@ -3046,8 +2934,7 @@ function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas,
       prompt = `Eres el copiloto de Renzo Moscol (Supervisor de Producción GLD). Generá la PLANIFICACIÓN DEL DÍA para hoy (${fmtFecha(hoy())}) en la obra "${obra?.cliente} · ${obra?.nombre}". ${turnoTxt}\n\nUsá: el cronograma adjunto (si hay), las partidas registradas, lo realizado en visitas anteriores, las notas pendientes, las incidencias abiertas y el conocimiento del cerebro.\n\nDevolveme EL TEXTO COMPLETO listo para enviar al grupo WhatsApp, usando EXACTAMENTE este formato (reemplazá los [placeholders] con actividades, responsables y objetivos REALES, específicos y accionables):\n\n${formato}\n\nReglas:\n- Sé concreto: actividades verificables (no genéricas).\n- Responsables: usá nombres reales del residente/PDR/subcontrata de la obra si los conocés del contexto. Si no, dejá "[Residente]" o "[PDR]".\n- Si una partida está atrasada o tiene restricciones, priorizala.\n- No agregues texto fuera del formato.\n`;
     }
     else prompt = `Eres el copiloto de Renzo Moscol (Supervisor de Producción GLD). Generá la PROGRAMACIÓN SEMANAL para la obra "${obra?.cliente} · ${obra?.nombre}" del lunes próximo en adelante (7 días). ${turnoTxt}\n\nUsá: el cronograma adjunto (si hay), las partidas registradas, avances de las visitas, notas pendientes, incidencias abiertas, y el conocimiento del cerebro.\n\nFormato:\n\n📅 PROGRAMACIÓN SEMANAL — ${obra?.nombre}\nSemana del [fecha inicio al fecha fin]\n\nLUN [fecha]:\n  Diurno: …\n  Nocturno: … (si aplica)\nMAR [fecha]: …\nMIÉ [fecha]: …\nJUE [fecha]: …\nVIE [fecha]: …\nSÁB [fecha]: …\n\n🎯 Hitos clave de la semana:\n[…]\n\n⚠ Riesgos / restricciones a liberar:\n[…]\n\n📦 Recursos críticos:\n[…]\n`;
-    const zonaNombre = zonaSel === "general" ? "obra completa" : (zonasObra.find(z => "z:"+z.id === zonaSel)?.nombre || zonaSel);
-    const ctxData = `\n\nÁMBITO DEL PLAN: ${zonaNombre}\n\nDATOS:\nCronograma partidas${zonaSel !== "general" ? " (solo de esta zona)" : ""}: ${JSON.stringify(rowsFiltradas)}\nÚltimas visitas: ${JSON.stringify(visObra)}\nNotas pendientes: ${JSON.stringify(notObra)}\nIncidencias abiertas: ${JSON.stringify(incObra)}\nObra info: ${JSON.stringify({ etapa: obra?.etapa, apertura: obra?.fechaApertura, dias_a_apertura: diasPara(obra?.fechaApertura) })}${cb ? "\nCEREBRO:\n"+cb : ""}`;
+    const ctxData = `\n\nDATOS:\nCronograma partidas: ${JSON.stringify(rows)}\nÚltimas visitas: ${JSON.stringify(visObra)}\nNotas pendientes: ${JSON.stringify(notObra)}\nIncidencias abiertas: ${JSON.stringify(incObra)}\nObra info: ${JSON.stringify({ etapa: obra?.etapa, apertura: obra?.fechaApertura, dias_a_apertura: diasPara(obra?.fechaApertura) })}${cb ? "\nCEREBRO:\n"+cb : ""}`;
     const content = [];
     if (cronoDoc?.data) {
       if (cronoDoc.tipo === "pdf") content.push({ type:"document", source:{ type:"base64", media_type:"application/pdf", data: dataURLtoBase64(cronoDoc.data) } });
@@ -3057,20 +2944,10 @@ function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas,
     const t = await askClaude([{ role:"user", content }], apiKey, 2000);
     setPlanOut(t); setPlanLoad(false);
   };
-  const zonaIdActual = zonaSel === "general" ? null : zonaSel.replace("z:","");
-  const add = () => {
-    const newRow = { id: uid(), partida:"", inicio: hoy(), fin: hoy(), avance:0, resp:"" };
-    if (zonaIdActual) newRow.zonaId = zonaIdActual;
-    save(obraId, [...rows, newRow]);
-  };
-  const loadTpl = () => {
-    const base = obra?.fechaInicio || hoy();
-    if (rowsFiltradas.length && !confirm(`¿Reemplazar el cronograma actual de ${zonaSel === "general" ? "esta obra" : "esta zona"} con la plantilla de 15 días?`)) return;
-    const nuevasRows = CRONO_TEMPLATE.map(t => { const r = { id: uid(), partida: t.p, inicio: addDays(base, t.di - 1), fin: addDays(base, t.df - 1), avance: 0, resp: "" }; if (zonaIdActual) r.zonaId = zonaIdActual; return r; });
-    setRowsZona(nuevasRows);
-  };
+  const add = () => save(obraId, [...rows, { id: uid(), partida:"", inicio: hoy(), fin: hoy(), avance:0, resp:"" }]);
+  const loadTpl = () => { const base = obra?.fechaInicio || hoy(); if (rows.length && !confirm("¿Reemplazar el cronograma actual con la plantilla de 15 días?")) return; save(obraId, CRONO_TEMPLATE.map(t => ({ id: uid(), partida: t.p, inicio: addDays(base, t.di - 1), fin: addDays(base, t.df - 1), avance: 0, resp: "" }))); };
   const setRow = (id, k, v) => save(obraId, rows.map(r => r.id === id ? { ...r, [k]: v } : r));
-  const valid = rowsFiltradas.filter(r => r.inicio && r.fin);
+  const valid = rows.filter(r => r.inicio && r.fin);
   const min = valid.length ? valid.reduce((a, r) => r.inicio < a ? r.inicio : a, valid[0].inicio) : hoy();
   const max = valid.length ? valid.reduce((a, r) => r.fin > a ? r.fin : a, valid[0].fin) : hoy();
   const span = Math.max(1, (new Date(max) - new Date(min)) / 86400000);
@@ -3080,24 +2957,6 @@ function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas,
   return (
     <div style={{ padding:14 }}>
       <DocViewer open={verDoc} onClose={() => setVerDoc(false)} data={cronoDoc?.data} tipo={cronoDoc?.tipo} nombre={cronoDoc?.nombre} />
-
-      {/* Selector de zona — solo si la obra tiene zonas configuradas */}
-      {zonasObra.length > 0 && (
-        <div className="card" style={{ padding:11, marginBottom:10 }}>
-          <div className="lbl" style={{ marginBottom:7 }}><Layers size={11} style={{verticalAlign:-1, marginRight:4}} color="var(--cyan)" /> Cronograma por zona</div>
-          <div style={{ display:"flex", gap:5, overflowX:"auto", paddingBottom:4 }}>
-            <button onClick={() => setZonaSel("general")} className="btn" style={{ flex:"0 0 auto", padding:"7px 12px", fontSize:12.5, background: zonaSel === "general" ? "var(--accent)" : "var(--surface)", color: zonaSel === "general" ? "#fff" : "var(--ink2)", border:`1px solid ${zonaSel === "general" ? "var(--accent)" : "var(--border)"}`, whiteSpace:"nowrap" }}>General / Obra completa</button>
-            {zonasObra.map(z => {
-              const countZona = rows.filter(r => r.zonaId === z.id).length;
-              return (
-                <button key={z.id} onClick={() => setZonaSel("z:"+z.id)} className="btn" style={{ flex:"0 0 auto", padding:"7px 12px", fontSize:12.5, background: zonaSel === "z:"+z.id ? "var(--accent)" : "var(--surface)", color: zonaSel === "z:"+z.id ? "#fff" : "var(--ink2)", border:`1px solid ${zonaSel === "z:"+z.id ? "var(--accent)" : "var(--border)"}`, whiteSpace:"nowrap" }}>{z.nombre}{countZona > 0 ? ` (${countZona})` : ""}</button>
-              );
-            })}
-          </div>
-          <div style={{ fontSize:11, color:"var(--ink3)", marginTop:7, lineHeight:1.4 }}>📌 Mostrando cronograma de <b>{zonaSel === "general" ? "Obra completa" : zonasObra.find(z => "z:"+z.id === zonaSel)?.nombre}</b>. Cada zona tiene partidas independientes. El plan IA usa solo las de la zona activa.</div>
-        </div>
-      )}
-
       <Section title="Cronograma adjunto (PDF / imagen)" icon={Upload}>
         <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:8, lineHeight:1.45 }}>Subí el cronograma oficial de la obra (PDF o foto). La IA lo lee al generar el plan del día o la programación semanal.</div>
         {cronoDoc?.data ? (
@@ -3141,10 +3000,10 @@ function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas,
         )}
       </Section>
       {valid.length > 0 && (
-        <Section title={`Línea de tiempo ${zonaSel !== "general" ? "· " + (zonasObra.find(z => "z:"+z.id === zonaSel)?.nombre || "") : ""}`}>
+        <Section title="Línea de tiempo">
           <div style={{ position:"relative" }}>
             {hoyPos >= 0 && hoyPos <= 100 && <div style={{ position:"absolute", left: hoyPos + "%", top:0, bottom:0, width:2, background:"var(--accent)", zIndex:2 }} />}
-            {rowsFiltradas.map(r => (
+            {rows.map(r => (
               <div key={r.id} style={{ marginBottom:9 }}>
                 <div style={{ fontSize:12, fontWeight:600, marginBottom:3 }}>{r.partida || "—"}</div>
                 <div style={{ position:"relative", height:16, background:"var(--surface2)", color:"var(--ink)", borderRadius:8 }}>
@@ -3159,7 +3018,7 @@ function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas,
           </div>
         </Section>
       )}
-      {rowsFiltradas.map(r => (
+      {rows.map(r => (
         <div key={r.id} className="card" style={{ padding:12, marginBottom:8 }}>
           <div style={{ display:"flex", gap:8, marginBottom:8 }}>
             <input className="inp" placeholder="Partida" value={r.partida} list="plc" onChange={e => setRow(r.id, "partida", e.target.value)} />
@@ -3568,7 +3427,7 @@ function ObraHub({ obras, obraId, setObraId, calidad, plan, crono, visitas, save
       </div>
       {sub === "dash" && <ObraDash obra={obra} visitas={visitas} calidad={calidad[obraId]} crono={crono[obraId]} plan={plan[obraId]} incidencias={incidencias} notas={notas} cerebro={cerebro} apiKey={apiKey} onUpdateVisita={onUpdateVisita} zonasObra={zonas[obraId] || []} />}
       {sub === "partida" && <PartidaScreen obra={obra} data={partidas[obraId]} save={savePartida} saveCrono={saveCrono} />}
-      {sub === "crono" && <Cronograma obra={obra} obraId={obraId} rows={crono[obraId] || []} save={saveCrono} cronoDoc={cronoDocs[obraId]} saveCronoDoc={saveCronoDoc} visitas={visitas} notas={notas} incidencias={incidencias} cerebro={cerebro} apiKey={apiKey} savePlanDiario={savePlanDiario} zonasObra={zonas[obraId] || []} />}
+      {sub === "crono" && <Cronograma obra={obra} obraId={obraId} rows={crono[obraId] || []} save={saveCrono} cronoDoc={cronoDocs[obraId]} saveCronoDoc={saveCronoDoc} visitas={visitas} notas={notas} incidencias={incidencias} cerebro={cerebro} apiKey={apiKey} savePlanDiario={savePlanDiario} />}
       {sub === "entrega" && <EntregaScreen obra={obra} data={entregas[obraId]} save={saveEntrega} cerebro={cerebro} apiKey={apiKey} zonasObra={zonas[obraId] || []} />}
       {sub === "cal" && <CalidadList obraId={obraId} items={calidad[obraId]} save={saveCal} />}
       {sub === "plan" && <PlanList obraId={obraId} rows={plan[obraId] || []} save={savePlan} />}

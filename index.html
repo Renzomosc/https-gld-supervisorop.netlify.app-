@@ -2995,7 +2995,18 @@ function PlanosManager({ obraId, idx=[], loadPlano, save, del }) {
 }
 
 /* ============================ CRONOGRAMA (Gantt simple) ============================ */
-function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas, notas, incidencias, cerebro, apiKey, savePlanDiario }) {
+function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas, notas, incidencias, cerebro, apiKey, savePlanDiario, zonasObra=[] }) {
+  // Zona activa: "general" = cronograma de obra completa; "z:<id>" = cronograma de una zona
+  const [zonaSel, setZonaSel] = useState("general");
+  // Filtrar rows por zona (rows sin zonaId van a "general")
+  const rowsFiltradas = rows.filter(r => (zonaSel === "general" ? !r.zonaId : r.zonaId === zonaSel.replace("z:","")));
+  const setRowsZona = (newRows) => {
+    // Mantener rows de OTRAS zonas + reemplazar rows de la zona actual
+    const otrasRows = rows.filter(r => (zonaSel === "general" ? r.zonaId : (r.zonaId !== zonaSel.replace("z:","") && !!r.zonaId !== false)));
+    // simplificar: reemplazo solo las de zona actual
+    const sinEsta = rows.filter(r => (zonaSel === "general" ? !!r.zonaId : r.zonaId !== zonaSel.replace("z:","")));
+    save(obraId, [...sinEsta, ...newRows]);
+  };
   const [planOut, setPlanOut] = useState("");
   const [planLoad, setPlanLoad] = useState(false);
   const [planTipo, setPlanTipo] = useState("");
@@ -3031,7 +3042,8 @@ function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas,
       prompt = `Eres el copiloto de Renzo Moscol (Supervisor de Producción GLD). Generá la PLANIFICACIÓN DEL DÍA para hoy (${fmtFecha(hoy())}) en la obra "${obra?.cliente} · ${obra?.nombre}". ${turnoTxt}\n\nUsá: el cronograma adjunto (si hay), las partidas registradas, lo realizado en visitas anteriores, las notas pendientes, las incidencias abiertas y el conocimiento del cerebro.\n\nDevolveme EL TEXTO COMPLETO listo para enviar al grupo WhatsApp, usando EXACTAMENTE este formato (reemplazá los [placeholders] con actividades, responsables y objetivos REALES, específicos y accionables):\n\n${formato}\n\nReglas:\n- Sé concreto: actividades verificables (no genéricas).\n- Responsables: usá nombres reales del residente/PDR/subcontrata de la obra si los conocés del contexto. Si no, dejá "[Residente]" o "[PDR]".\n- Si una partida está atrasada o tiene restricciones, priorizala.\n- No agregues texto fuera del formato.\n`;
     }
     else prompt = `Eres el copiloto de Renzo Moscol (Supervisor de Producción GLD). Generá la PROGRAMACIÓN SEMANAL para la obra "${obra?.cliente} · ${obra?.nombre}" del lunes próximo en adelante (7 días). ${turnoTxt}\n\nUsá: el cronograma adjunto (si hay), las partidas registradas, avances de las visitas, notas pendientes, incidencias abiertas, y el conocimiento del cerebro.\n\nFormato:\n\n📅 PROGRAMACIÓN SEMANAL — ${obra?.nombre}\nSemana del [fecha inicio al fecha fin]\n\nLUN [fecha]:\n  Diurno: …\n  Nocturno: … (si aplica)\nMAR [fecha]: …\nMIÉ [fecha]: …\nJUE [fecha]: …\nVIE [fecha]: …\nSÁB [fecha]: …\n\n🎯 Hitos clave de la semana:\n[…]\n\n⚠ Riesgos / restricciones a liberar:\n[…]\n\n📦 Recursos críticos:\n[…]\n`;
-    const ctxData = `\n\nDATOS:\nCronograma partidas: ${JSON.stringify(rows)}\nÚltimas visitas: ${JSON.stringify(visObra)}\nNotas pendientes: ${JSON.stringify(notObra)}\nIncidencias abiertas: ${JSON.stringify(incObra)}\nObra info: ${JSON.stringify({ etapa: obra?.etapa, apertura: obra?.fechaApertura, dias_a_apertura: diasPara(obra?.fechaApertura) })}${cb ? "\nCEREBRO:\n"+cb : ""}`;
+    const zonaNombre = zonaSel === "general" ? "obra completa" : (zonasObra.find(z => "z:"+z.id === zonaSel)?.nombre || zonaSel);
+    const ctxData = `\n\nÁMBITO DEL PLAN: ${zonaNombre}\n\nDATOS:\nCronograma partidas${zonaSel !== "general" ? " (solo de esta zona)" : ""}: ${JSON.stringify(rowsFiltradas)}\nÚltimas visitas: ${JSON.stringify(visObra)}\nNotas pendientes: ${JSON.stringify(notObra)}\nIncidencias abiertas: ${JSON.stringify(incObra)}\nObra info: ${JSON.stringify({ etapa: obra?.etapa, apertura: obra?.fechaApertura, dias_a_apertura: diasPara(obra?.fechaApertura) })}${cb ? "\nCEREBRO:\n"+cb : ""}`;
     const content = [];
     if (cronoDoc?.data) {
       if (cronoDoc.tipo === "pdf") content.push({ type:"document", source:{ type:"base64", media_type:"application/pdf", data: dataURLtoBase64(cronoDoc.data) } });
@@ -3041,10 +3053,20 @@ function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas,
     const t = await askClaude([{ role:"user", content }], apiKey, 2000);
     setPlanOut(t); setPlanLoad(false);
   };
-  const add = () => save(obraId, [...rows, { id: uid(), partida:"", inicio: hoy(), fin: hoy(), avance:0, resp:"" }]);
-  const loadTpl = () => { const base = obra?.fechaInicio || hoy(); if (rows.length && !confirm("¿Reemplazar el cronograma actual con la plantilla de 15 días?")) return; save(obraId, CRONO_TEMPLATE.map(t => ({ id: uid(), partida: t.p, inicio: addDays(base, t.di - 1), fin: addDays(base, t.df - 1), avance: 0, resp: "" }))); };
+  const zonaIdActual = zonaSel === "general" ? null : zonaSel.replace("z:","");
+  const add = () => {
+    const newRow = { id: uid(), partida:"", inicio: hoy(), fin: hoy(), avance:0, resp:"" };
+    if (zonaIdActual) newRow.zonaId = zonaIdActual;
+    save(obraId, [...rows, newRow]);
+  };
+  const loadTpl = () => {
+    const base = obra?.fechaInicio || hoy();
+    if (rowsFiltradas.length && !confirm(`¿Reemplazar el cronograma actual de ${zonaSel === "general" ? "esta obra" : "esta zona"} con la plantilla de 15 días?`)) return;
+    const nuevasRows = CRONO_TEMPLATE.map(t => { const r = { id: uid(), partida: t.p, inicio: addDays(base, t.di - 1), fin: addDays(base, t.df - 1), avance: 0, resp: "" }; if (zonaIdActual) r.zonaId = zonaIdActual; return r; });
+    setRowsZona(nuevasRows);
+  };
   const setRow = (id, k, v) => save(obraId, rows.map(r => r.id === id ? { ...r, [k]: v } : r));
-  const valid = rows.filter(r => r.inicio && r.fin);
+  const valid = rowsFiltradas.filter(r => r.inicio && r.fin);
   const min = valid.length ? valid.reduce((a, r) => r.inicio < a ? r.inicio : a, valid[0].inicio) : hoy();
   const max = valid.length ? valid.reduce((a, r) => r.fin > a ? r.fin : a, valid[0].fin) : hoy();
   const span = Math.max(1, (new Date(max) - new Date(min)) / 86400000);
@@ -3054,6 +3076,24 @@ function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas,
   return (
     <div style={{ padding:14 }}>
       <DocViewer open={verDoc} onClose={() => setVerDoc(false)} data={cronoDoc?.data} tipo={cronoDoc?.tipo} nombre={cronoDoc?.nombre} />
+
+      {/* Selector de zona — solo si la obra tiene zonas configuradas */}
+      {zonasObra.length > 0 && (
+        <div className="card" style={{ padding:11, marginBottom:10 }}>
+          <div className="lbl" style={{ marginBottom:7 }}><Layers size={11} style={{verticalAlign:-1, marginRight:4}} color="var(--cyan)" /> Cronograma por zona</div>
+          <div style={{ display:"flex", gap:5, overflowX:"auto", paddingBottom:4 }}>
+            <button onClick={() => setZonaSel("general")} className="btn" style={{ flex:"0 0 auto", padding:"7px 12px", fontSize:12.5, background: zonaSel === "general" ? "var(--accent)" : "var(--surface)", color: zonaSel === "general" ? "#fff" : "var(--ink2)", border:`1px solid ${zonaSel === "general" ? "var(--accent)" : "var(--border)"}`, whiteSpace:"nowrap" }}>General / Obra completa</button>
+            {zonasObra.map(z => {
+              const countZona = rows.filter(r => r.zonaId === z.id).length;
+              return (
+                <button key={z.id} onClick={() => setZonaSel("z:"+z.id)} className="btn" style={{ flex:"0 0 auto", padding:"7px 12px", fontSize:12.5, background: zonaSel === "z:"+z.id ? "var(--accent)" : "var(--surface)", color: zonaSel === "z:"+z.id ? "#fff" : "var(--ink2)", border:`1px solid ${zonaSel === "z:"+z.id ? "var(--accent)" : "var(--border)"}`, whiteSpace:"nowrap" }}>{z.nombre}{countZona > 0 ? ` (${countZona})` : ""}</button>
+              );
+            })}
+          </div>
+          <div style={{ fontSize:11, color:"var(--ink3)", marginTop:7, lineHeight:1.4 }}>📌 Mostrando cronograma de <b>{zonaSel === "general" ? "Obra completa" : zonasObra.find(z => "z:"+z.id === zonaSel)?.nombre}</b>. Cada zona tiene partidas independientes. El plan IA usa solo las de la zona activa.</div>
+        </div>
+      )}
+
       <Section title="Cronograma adjunto (PDF / imagen)" icon={Upload}>
         <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:8, lineHeight:1.45 }}>Subí el cronograma oficial de la obra (PDF o foto). La IA lo lee al generar el plan del día o la programación semanal.</div>
         {cronoDoc?.data ? (
@@ -3097,10 +3137,10 @@ function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas,
         )}
       </Section>
       {valid.length > 0 && (
-        <Section title="Línea de tiempo">
+        <Section title={`Línea de tiempo ${zonaSel !== "general" ? "· " + (zonasObra.find(z => "z:"+z.id === zonaSel)?.nombre || "") : ""}`}>
           <div style={{ position:"relative" }}>
             {hoyPos >= 0 && hoyPos <= 100 && <div style={{ position:"absolute", left: hoyPos + "%", top:0, bottom:0, width:2, background:"var(--accent)", zIndex:2 }} />}
-            {rows.map(r => (
+            {rowsFiltradas.map(r => (
               <div key={r.id} style={{ marginBottom:9 }}>
                 <div style={{ fontSize:12, fontWeight:600, marginBottom:3 }}>{r.partida || "—"}</div>
                 <div style={{ position:"relative", height:16, background:"var(--surface2)", color:"var(--ink)", borderRadius:8 }}>
@@ -3115,7 +3155,7 @@ function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas,
           </div>
         </Section>
       )}
-      {rows.map(r => (
+      {rowsFiltradas.map(r => (
         <div key={r.id} className="card" style={{ padding:12, marginBottom:8 }}>
           <div style={{ display:"flex", gap:8, marginBottom:8 }}>
             <input className="inp" placeholder="Partida" value={r.partida} list="plc" onChange={e => setRow(r.id, "partida", e.target.value)} />
@@ -3524,7 +3564,7 @@ function ObraHub({ obras, obraId, setObraId, calidad, plan, crono, visitas, save
       </div>
       {sub === "dash" && <ObraDash obra={obra} visitas={visitas} calidad={calidad[obraId]} crono={crono[obraId]} plan={plan[obraId]} incidencias={incidencias} notas={notas} cerebro={cerebro} apiKey={apiKey} onUpdateVisita={onUpdateVisita} zonasObra={zonas[obraId] || []} />}
       {sub === "partida" && <PartidaScreen obra={obra} data={partidas[obraId]} save={savePartida} saveCrono={saveCrono} />}
-      {sub === "crono" && <Cronograma obra={obra} obraId={obraId} rows={crono[obraId] || []} save={saveCrono} cronoDoc={cronoDocs[obraId]} saveCronoDoc={saveCronoDoc} visitas={visitas} notas={notas} incidencias={incidencias} cerebro={cerebro} apiKey={apiKey} savePlanDiario={savePlanDiario} />}
+      {sub === "crono" && <Cronograma obra={obra} obraId={obraId} rows={crono[obraId] || []} save={saveCrono} cronoDoc={cronoDocs[obraId]} saveCronoDoc={saveCronoDoc} visitas={visitas} notas={notas} incidencias={incidencias} cerebro={cerebro} apiKey={apiKey} savePlanDiario={savePlanDiario} zonasObra={zonas[obraId] || []} />}
       {sub === "entrega" && <EntregaScreen obra={obra} data={entregas[obraId]} save={saveEntrega} cerebro={cerebro} apiKey={apiKey} zonasObra={zonas[obraId] || []} />}
       {sub === "cal" && <CalidadList obraId={obraId} items={calidad[obraId]} save={saveCal} />}
       {sub === "plan" && <PlanList obraId={obraId} rows={plan[obraId] || []} save={savePlan} />}

@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0a0d13" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>Arkym Sup · v13.3</title>
-<meta name="version" content="v13.3-fases-dashboard" />
-<meta name="last-deploy" content="auto-deploy-2026-05-30c" />
+<title>Arkym Sup · v13.2</title>
+<meta name="version" content="v13.2-arkym" />
+<meta name="last-deploy" content="auto-deploy-2026-05-30b" />
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Arkym%20Sup%22%2C%22short_name%22%3A%22Arkym%22%2C%22description%22%3A%22Supervisi%C3%B3n%20de%20producci%C3%B3n%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230a0d13%22%2C%22theme_color%22%3A%22%230a0d13%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520192%2520192%2522%253E%253Crect%2520width%253D%2522192%2522%2520height%253D%2522192%2522%2520rx%253D%252236%2522%2520fill%253D%2522%2523ff6b35%2522%252F%253E%253Ctext%2520x%253D%252296%2522%2520y%253D%2522118%2522%2520text-anchor%253D%2522middle%2522%2520font-family%253D%2522system-ui%2522%2520font-weight%253D%2522bold%2522%2520font-size%253D%252264%2522%2520fill%253D%2522%25230a0d13%2522%253EAS%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%23ff6b35'/%3E%3Ctext x='96' y='118' text-anchor='middle' font-family='system-ui' font-weight='bold' font-size='64' fill='%230a0d13'%3EAS%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -912,7 +912,7 @@ const blankZona = (nombre = "") => ({ id: uid(), nombre, estado: "Activa", avanc
 const blankZonaPartida = () => ({ id: uid(), partida: "", inicio: hoy(), fin: hoy(), avance: 0, nota: "" });
 function reporteDiarioTexto(f, obra, zonasObra=[]) {
   const L = []; const obj = obra?.horaInicio || "08:00";
-  L.push(`REPORTE DIARIO DE SUPERVISIÓN`);
+  L.push(`REPORTE DIARIO DE SUPERVISIÓN — GLD`);
   L.push(`Tienda: ${obra?.cliente || ""} · ${obra?.nombre || ""}`);
   if (obra?.direccion) L.push(`Local: ${obra.direccion}`);
   L.push(`Fecha: ${fmtFecha(f.fecha)}   |   Supervisor: ${f.supervisor}   |   Alerta: ${f.alerta.toUpperCase()}`);
@@ -1712,27 +1712,9 @@ const empresaPorCliente = (cliente) => {
   if (cliente === "Aruma") return "RAD 415";
   return "Otra";
 };
-const TIPOS_OBRA = ["Obra nueva", "Remodelación", "Implementación", "Fit-out por fases", "Otro"];
-const ESTADOS_FASE = ["Pendiente", "En curso", "Liberada", "Bloqueada"];
-// Cálculo automático de avance de obra: promedio ponderado de partidas del cronograma + zonas
-const computeAvanceObra = (obraId, crono={}, zonas={}) => {
-  const rows = (crono[obraId] || []).filter(r => r.partida && (r.inicio || r.fin));
-  const zns = (zonas[obraId] || []);
-  let suma = 0, cant = 0;
-  rows.forEach(r => { suma += (+r.avance || 0); cant++; });
-  zns.forEach(z => {
-    if (z.partidas && z.partidas.length) {
-      z.partidas.forEach(p => { suma += (+p.avance || 0); cant++; });
-    } else if (z.avance != null) { suma += (+z.avance || 0); cant++; }
-  });
-  if (cant === 0) return { pct: 0, fuente: "sin-datos", count: 0 };
-  return { pct: Math.round(suma / cant), fuente: rows.length && zns.length ? "crono+zonas" : rows.length ? "crono" : "zonas", count: cant };
-};
-const FASE_COL = { "Pendiente":"var(--ink3)", "En curso":"var(--cyan)", "Liberada":"var(--verde)", "Bloqueada":"var(--rojo)" };
-const blankFase = (n=1) => ({ id: uid(), nombre: `Fase ${n}`, fechaInicio: hoy(), fechaFin: "", estado: "Pendiente", alcance: "", historialFechas: [] });
-function ObrasScreen({ obras, save, onAbrirNota, crono={}, zonas={} }) {
+function ObrasScreen({ obras, save, onAbrirNota }) {
   const [ed, setEd] = useState(null);
-  const blank = { id: uid(), nombre:"", cliente:"Aruma", empresa:"RAD 415", direccion:"", m2:"", residente:"", pdr:"", horaInicio:"08:00", fechaInicio: hoy(), fechaApertura:"", etapa:"", arqCliente:"", tipoObra:"Remodelación", porFases: false, fases:[] };
+  const blank = { id: uid(), nombre:"", cliente:"Aruma", empresa:"RAD 415", direccion:"", m2:"", residente:"", pdr:"", horaInicio:"08:00", fechaInicio: hoy(), fechaApertura:"", etapa:"", arqCliente:"" };
   const commit = () => { if (!ed.nombre.trim()) return alert("Ponle nombre."); const ex = obras.find(o=>o.id===ed.id); save(ex ? obras.map(o=>o.id===ed.id?ed:o) : [...obras, ed]); setEd(null); };
   if (ed) return (
     <div style={{ padding:14, paddingBottom:110 }}>
@@ -1758,52 +1740,7 @@ function ObrasScreen({ obras, save, onAbrirNota, crono={}, zonas={} }) {
           <div style={{ flex:1 }}><Field label="Inicio"><TInput type="date" value={ed.fechaInicio} onChange={e=>setEd({...ed, fechaInicio:e.target.value})} /></Field></div>
           <div style={{ flex:1 }}><Field label="Apertura"><TInput type="date" value={ed.fechaApertura} onChange={e=>setEd({...ed, fechaApertura:e.target.value})} /></Field></div>
         </div>
-        <Field label="Tipo de obra">
-          <Sel value={ed.tipoObra || "Remodelación"} onChange={e=>setEd({...ed, tipoObra:e.target.value})} options={TIPOS_OBRA} />
-        </Field>
-        <Toggle label="🧩 Esta obra se entrega por fases" value={!!ed.porFases} onChange={v => {
-          if (v && (!ed.fases || ed.fases.length === 0)) {
-            const n = parseInt(prompt("¿Cuántas fases tiene la obra al día de hoy? (podés agregar más después)", "2"), 10) || 1;
-            const fs = Array.from({ length: Math.max(1, Math.min(n, 20)) }, (_, i) => blankFase(i + 1));
-            setEd({ ...ed, porFases: true, fases: fs });
-          } else setEd({ ...ed, porFases: v });
-        }} />
       </Section>
-      {ed.porFases && (
-        <Section title={`🧩 Fases de la obra (${(ed.fases||[]).length})`} icon={Layers}>
-          <div style={{ fontSize:12, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>El cliente lanza fases progresivamente. Acá podés agregar/editar fechas; el historial queda guardado para auditoría.</div>
-          {(ed.fases || []).map((f, i) => {
-            const col = FASE_COL[f.estado] || "var(--ink3)";
-            return (
-              <div key={f.id} className="card" style={{ padding:11, marginBottom:8, background:"var(--surface)", borderLeft:`3px solid ${col}` }}>
-                <div style={{ display:"flex", gap:6, marginBottom:7, alignItems:"center" }}>
-                  <TInput value={f.nombre} onChange={e => { const nf = [...ed.fases]; nf[i] = { ...f, nombre: e.target.value }; setEd({ ...ed, fases: nf }); }} placeholder="Nombre fase" />
-                  <button className="btn" onClick={() => setEd({ ...ed, fases: ed.fases.filter(x => x.id !== f.id) })} style={{ background:"transparent", padding:6 }}><Trash2 size={14} color="var(--rojo)" /></button>
-                </div>
-                <div style={{ display:"flex", gap:5, marginBottom:6, flexWrap:"wrap" }}>
-                  {ESTADOS_FASE.map(est => (
-                    <button key={est} className="btn" onClick={() => { const nf = [...ed.fases]; nf[i] = { ...f, estado: est }; setEd({ ...ed, fases: nf }); }} style={{ flex:1, padding:"6px 4px", fontSize:11, background: f.estado === est ? FASE_COL[est] : "var(--surface)", color: f.estado === est ? "#0a0d13" : "var(--ink2)", border:`1px solid ${FASE_COL[est]}55`, fontWeight: f.estado === est ? 700 : 500, minWidth:75 }}>{est}</button>
-                  ))}
-                </div>
-                <div style={{ display:"flex", gap:6, marginBottom:6 }}>
-                  <div style={{ flex:1 }}><label className="lbl">Inicio</label><TInput type="date" value={f.fechaInicio} onChange={e => { const nf = [...ed.fases]; const prev = f.fechaInicio; const hist = prev && prev !== e.target.value ? [...(f.historialFechas||[]), { campo:"inicio", antes: prev, nuevo: e.target.value, ts: hoy() }] : (f.historialFechas||[]); nf[i] = { ...f, fechaInicio: e.target.value, historialFechas: hist }; setEd({ ...ed, fases: nf }); }} /></div>
-                  <div style={{ flex:1 }}><label className="lbl">Fin estimado</label><TInput type="date" value={f.fechaFin} onChange={e => { const nf = [...ed.fases]; const prev = f.fechaFin; const hist = prev && prev !== e.target.value ? [...(f.historialFechas||[]), { campo:"fin", antes: prev, nuevo: e.target.value, ts: hoy() }] : (f.historialFechas||[]); nf[i] = { ...f, fechaFin: e.target.value, historialFechas: hist }; setEd({ ...ed, fases: nf }); }} /></div>
-                </div>
-                <TArea value={f.alcance} onChange={e => { const nf = [...ed.fases]; nf[i] = { ...f, alcance: e.target.value }; setEd({ ...ed, fases: nf }); }} rows={2} placeholder="Alcance de la fase (qué partidas/zonas incluye)" />
-                {(f.historialFechas || []).length > 0 && (
-                  <details style={{ marginTop:7, fontSize:11 }}>
-                    <summary style={{ cursor:"pointer", color:"var(--cyan)" }}>📅 Historial fechas ({f.historialFechas.length})</summary>
-                    <div style={{ marginTop:5 }}>
-                      {f.historialFechas.map((h, hi) => (<div key={hi} className="mono" style={{ fontSize:10.5, color:"var(--ink3)", padding:"2px 0" }}>{h.ts}: {h.campo} {h.antes || "—"} → <b style={{ color:"var(--ink2)" }}>{h.nuevo}</b></div>))}
-                    </div>
-                  </details>
-                )}
-              </div>
-            );
-          })}
-          <button onClick={() => setEd({ ...ed, fases: [...(ed.fases||[]), blankFase((ed.fases||[]).length + 1)] })} className="btn" style={{ background:"var(--surface3)", color:"var(--ink)", padding:10, width:"100%" }}><Plus size={15} style={{verticalAlign:-2}} /> Agregar otra fase</button>
-        </Section>
-      )}
       <div style={{ display:"flex", gap:10 }}>
         <button className="btn" onClick={()=>setEd(null)} style={{ flex:1, background:"var(--surface2)", color:"var(--ink)", padding:14 }}>Cancelar</button>
         <button className="btn" onClick={commit} style={{ flex:2, background:"var(--accent)", color:"#fff", padding:14 }}><Save size={16} style={{verticalAlign:-3}} /> Guardar tienda</button>
@@ -1827,32 +1764,6 @@ function ObrasScreen({ obras, save, onAbrirNota, crono={}, zonas={} }) {
               {o.residente && <div style={{ fontSize:13, color:"var(--ink2)" }}>Residente: {o.residente}{o.pdr?` · PDR: ${o.pdr}`:""}</div>}
               {o.arqCliente && <div style={{ fontSize:13, color:"var(--ink2)" }}>Arq. cliente: {o.arqCliente}</div>}
               {d != null && <div className="mono" style={{ fontSize:12, marginTop:4, color: d < 7 ? "var(--rojo)" : "var(--ink2)" }}>Apertura en {d >= 0 ? d + " días" : "VENCIDA"}</div>}
-              {(() => {
-                const av = computeAvanceObra(o.id, crono, zonas);
-                if (av.count === 0) return <div title="Cargá partidas en Cronograma o avance en Zonas para calcular automáticamente" style={{ fontSize:11, marginTop:5, color:"var(--ink3)", fontStyle:"italic" }}>Avance: sin datos (cargá cronograma)</div>;
-                const colAv = av.pct < 30 ? "var(--rojo)" : av.pct < 70 ? "var(--ambar)" : "var(--verde)";
-                return (
-                  <div style={{ marginTop:6 }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"var(--ink2)", marginBottom:3 }}>
-                      <span>Avance ({av.fuente} · {av.count} items)</span><span className="mono" style={{ fontWeight:700, color: colAv }}>{av.pct}%</span>
-                    </div>
-                    <div style={{ height:5, background:"var(--surface3)", borderRadius:99 }}>
-                      <div style={{ width: av.pct+"%", height:"100%", background: colAv, borderRadius:99, boxShadow:`0 0 6px ${colAv}55` }} />
-                    </div>
-                  </div>
-                );
-              })()}
-              {o.porFases && (o.fases || []).length > 0 && (
-                <div style={{ marginTop:8, padding:8, background:"var(--surface)", borderRadius:7, border:"1px solid var(--border-soft)" }}>
-                  <div style={{ fontSize:10.5, fontWeight:600, color:"var(--ink3)", textTransform:"uppercase", letterSpacing:".06em", marginBottom:5 }}>{o.fases.length} fases · {o.tipoObra || "—"}</div>
-                  <div style={{ display:"flex", gap:3, flexWrap:"wrap" }}>
-                    {o.fases.map(f => {
-                      const col = FASE_COL[f.estado] || "var(--ink3)";
-                      return <span key={f.id} className="mono" title={`${f.nombre} · ${f.estado}${f.fechaFin?" · fin "+f.fechaFin:""}`} style={{ fontSize:10, padding:"2px 7px", borderRadius:99, background: col+"22", color: col, border:`1px solid ${col}66`, fontWeight:600 }}>{f.nombre}</span>;
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
             <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
               {onAbrirNota && <button className="btn" onClick={()=>onAbrirNota(o.id)} style={{ background:"var(--ia)", color:"#fff", padding:7 }} title="Anotar pendiente"><MessageSquare size={14} /></button>}
@@ -1877,36 +1788,6 @@ const arkymNotify = (titulo, opts={}) => {
     if (opts.onClick) n.onclick = () => { window.focus(); opts.onClick(); n.close(); };
     return true;
   } catch { return false; }
-};
-
-// === Mensaje estándar para avance 10am / 3pm ===
-const mensajeAvanceFormat = (hora) => {
-  const labelHora = hora === "10:00" ? "MAÑANA — 10:00 AM" : "TARDE — 3:00 PM";
-  return `📊 REPORTE DE AVANCE ${labelHora}\n\nEstimado equipo, por favor envíen el reporte de avance con lo siguiente:\n\n📸 ADJUNTAR:\n• 3 fotos PANORÁMICAS de avance (área limpia)\n• 1 foto EXTERIOR del perímetro (limpio)\n• Foto de circulación para personal de tienda (aplica si su circulación está dentro del área a intervenir)\n\nGracias.`;
-};
-
-// === Scheduler de notificaciones programadas (revisa cada minuto) ===
-// Guarda la última fecha de disparo por hora-tag en localStorage para no repetir
-const NOTIF_SCHED_KEY = "arkym:notif:lastfire";
-const arkymCheckScheduledNotifs = (cfg={}) => {
-  const enabled = cfg.notifAvances !== false; // por defecto activadas
-  if (!enabled) return;
-  if (!("Notification" in window) || Notification.permission !== "granted") return;
-  const now = new Date();
-  const hhmm = String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
-  const today = now.toISOString().slice(0,10);
-  let last = {}; try { last = JSON.parse(localStorage.getItem(NOTIF_SCHED_KEY) || "{}"); } catch {}
-  const horarios = [
-    { hora: cfg.horaAvanceMorning || "10:00", tag: "avance-am", titulo: "📊 Avance mañana (10 AM)", body: "Es hora del reporte de avance. Tocá para ver el mensaje." },
-    { hora: cfg.horaAvanceAfternoon || "15:00", tag: "avance-pm", titulo: "📊 Avance tarde (3 PM)", body: "Es hora del reporte de avance. Tocá para ver el mensaje." },
-  ];
-  horarios.forEach(h => {
-    if (hhmm === h.hora && last[h.tag] !== today) {
-      arkymNotify(h.titulo, { body: h.body, tag: h.tag, requireInteraction: true });
-      last[h.tag] = today;
-      try { localStorage.setItem(NOTIF_SCHED_KEY, JSON.stringify(last)); } catch {}
-    }
-  });
 };
 function NotifBlock() {
   const [perm, setPerm] = useState(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
@@ -1935,86 +1816,6 @@ function NotifBlock() {
     <button onClick={pedirPermiso} className="btn" style={{ background:"linear-gradient(135deg, var(--accent), #ff8855)", color:"#fff", padding:13, width:"100%", fontSize:13 }}>🔔 Activar notificaciones del navegador</button>
   );
 }
-// === Diagnóstico Supabase: listar todas las claves remotas con tamaño + restaurar individual ===
-function DiagnosticoSupabase({ reload }) {
-  const [items, setItems] = useState(null);
-  const [load, setLoad] = useState(false);
-  const [filtro, setFiltro] = useState("");
-  const [verContenido, setVerContenido] = useState(null);
-  const cargar = async () => {
-    setLoad(true); setItems(null);
-    try {
-      if (!store._sb) { alert("Supabase no está configurado."); setLoad(false); return; }
-      const r = await store._sbReq("/kv?select=key,value,updated_at&order=updated_at.desc");
-      if (!r || !r.ok) { alert("No se pudo listar: " + (r ? r.status : "sin respuesta")); setLoad(false); return; }
-      const data = await r.json();
-      const enriched = data.map(row => {
-        const json = JSON.stringify(row.value || {});
-        const size = json.length;
-        const esArray = Array.isArray(row.value);
-        const esObj = typeof row.value === "object" && !Array.isArray(row.value) && row.value !== null;
-        return {
-          key: row.key,
-          updated_at: row.updated_at,
-          size,
-          esArray,
-          esObj,
-          count: esArray ? row.value.length : (esObj ? Object.keys(row.value).length : 0),
-          preview: json.slice(0, 200),
-          full: row.value,
-        };
-      });
-      setItems(enriched);
-    } catch (e) { alert("Error: " + e.message); }
-    setLoad(false);
-  };
-  const restaurarKey = async (it) => {
-    if (!confirm(`Restaurar la clave "${it.key}" desde Supabase al local? Esto sobrescribe lo que haya en este dispositivo.`)) return;
-    store._localSet(it.key, it.full);
-    alert(`Clave "${it.key}" restaurada localmente. Recargando…`);
-    reload && reload();
-  };
-  const lista = items ? items.filter(i => !filtro || i.key.toLowerCase().includes(filtro.toLowerCase())) : [];
-  return (
-    <div>
-      <button onClick={cargar} disabled={load} className="btn" style={{ background:"var(--cyan)", color:"#0a0d13", padding:11, width:"100%", fontWeight:600 }}>{load ? "Cargando…" : "🔍 Listar TODAS las claves en Supabase"}</button>
-      {items && (
-        <div style={{ marginTop:10 }}>
-          <div style={{ fontSize:12, color:"var(--ink2)", marginBottom:6 }}>{items.length} clave(s) en el servidor. Filtrá por nombre (ej. "crono", "prescott", "planos"):</div>
-          <TInput value={filtro} onChange={e => setFiltro(e.target.value)} placeholder="Filtrar por nombre de clave..." />
-          <div style={{ marginTop:8, maxHeight:400, overflowY:"auto" }}>
-            {lista.map(it => (
-              <div key={it.key} className="card" style={{ padding:9, marginBottom:6, background:"var(--surface)" }}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:6 }}>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div className="mono" style={{ fontSize:12, fontWeight:600, color:"var(--ink)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{it.key}</div>
-                    <div className="mono" style={{ fontSize:10.5, color:"var(--ink3)" }}>{it.esArray ? `array · ${it.count} items` : it.esObj ? `obj · ${it.count} keys` : "valor"} · {(it.size/1024).toFixed(1)} KB · {new Date(it.updated_at).toLocaleString("es-PE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
-                  </div>
-                  <button onClick={() => setVerContenido(it)} className="btn" style={{ background:"var(--surface3)", color:"var(--ink)", padding:"5px 9px", fontSize:11 }}>Ver</button>
-                  <button onClick={() => restaurarKey(it)} className="btn" style={{ background:"var(--verde)", color:"#fff", padding:"5px 9px", fontSize:11, fontWeight:600 }}>Restaurar</button>
-                </div>
-              </div>
-            ))}
-            {!lista.length && <div style={{ textAlign:"center", fontSize:12, color:"var(--ink3)", padding:14 }}>Sin claves que coincidan.</div>}
-          </div>
-        </div>
-      )}
-      <Modal open={!!verContenido} onClose={() => setVerContenido(null)} title={verContenido?.key || ""} maxWidth={640}>
-        {verContenido && (
-          <>
-            <div style={{ fontSize:11.5, color:"var(--ink3)", marginBottom:8 }}>Tamaño: {(verContenido.size/1024).toFixed(2)} KB · Actualizado: {new Date(verContenido.updated_at).toLocaleString("es-PE")}</div>
-            <pre className="mono" style={{ background:"var(--bg)", padding:10, borderRadius:8, fontSize:11, maxHeight:"55vh", overflow:"auto", whiteSpace:"pre-wrap", color:"var(--ink)", border:"1px solid var(--border)" }}>{JSON.stringify(verContenido.full, null, 2)}</pre>
-            <div style={{ display:"flex", gap:8, marginTop:10 }}>
-              <button onClick={async () => { try { await navigator.clipboard.writeText(JSON.stringify(verContenido.full, null, 2)); alert("JSON copiado."); } catch {} }} className="btn" style={{ flex:1, background:"var(--surface3)", color:"var(--ink)", padding:10 }}>📋 Copiar JSON</button>
-              <button onClick={() => { restaurarKey(verContenido); setVerContenido(null); }} className="btn" style={{ flex:1, background:"var(--verde)", color:"#fff", padding:10, fontWeight:600 }}>↩ Restaurar al local</button>
-            </div>
-          </>
-        )}
-      </Modal>
-    </div>
-  );
-}
-
 // === Snapshots: lista + restaurar ===
 function SnapshotsBlock({ reload }) {
   const [snaps, setSnaps] = useState(store.getSnapshots());
@@ -2186,20 +1987,8 @@ function ConfigScreen({ cfg, save, reload }) {
         <button onClick={limpiarTodo} className="btn" style={{ background:"transparent", color:"var(--rojo)", padding:9, width:"100%", fontSize:12, border:"1px solid var(--rojo)" }}><Trash2 size={13} style={{verticalAlign:-2}} /> Borrar todos los datos (peligroso)</button>
       </Section>
       <Section title="🔔 Notificaciones del navegador" icon={Mail}>
-        <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>Activar para recibir avisos automáticos: avances 10am/3pm, incidencias críticas, recordatorios. Funcionan estés o no en la pestaña.</div>
+        <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>Activar para recibir avisos del navegador (incidencias críticas, recordatorios de jornada, plan IA listo). Funcionan estés o no en la pestaña, mientras el navegador esté abierto.</div>
         <NotifBlock />
-        <div style={{ marginTop:14, padding:11, background:"var(--surface)", borderRadius:8, border:"1px solid var(--border-soft)" }}>
-          <Toggle label="📊 Aviso de avance a las 10 AM y 3 PM" value={c.notifAvances !== false} onChange={v => setC({ ...c, notifAvances: v })} />
-          <div style={{ display:"flex", gap:8, marginTop:9 }}>
-            <div style={{ flex:1 }}><Field label="Hora mañana"><TimeInput value={c.horaAvanceMorning || "10:00"} onChange={e => setC({ ...c, horaAvanceMorning: e.target.value })} /></Field></div>
-            <div style={{ flex:1 }}><Field label="Hora tarde"><TimeInput value={c.horaAvanceAfternoon || "15:00"} onChange={e => setC({ ...c, horaAvanceAfternoon: e.target.value })} /></Field></div>
-          </div>
-          <div style={{ fontSize:11, color:"var(--ink3)", marginTop:4, lineHeight:1.5 }}>💡 La notificación trae el mensaje listo: 3 fotos panorámicas + 1 exterior + circulación tienda. Guardá ajustes para aplicar.</div>
-        </div>
-      </Section>
-      <Section title="🔍 Diagnóstico de datos en Supabase" icon={Search}>
-        <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>Si perdiste información (ej. Prescott), inspeccioná lo que hay en el servidor remoto. Buscá la clave (ej. <span className="mono">crono:abc123</span> o <span className="mono">planosidx:xxx</span>) y restaurá solo esa.</div>
-        <DiagnosticoSupabase reload={reload} />
       </Section>
       <Section title="🛟 Respaldos automáticos (snapshots)" icon={Save}>
         <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>La app guarda automáticamente un respaldo local antes de cada sincronización y cada 10 cambios. Si perdés data, restaurá desde acá.</div>
@@ -2250,33 +2039,9 @@ function Inicio({ obras, visitas, notas, incidencias, decisiones, crono, cfg, pl
       <span style={{ fontSize:11.5, fontWeight:600, letterSpacing:"-.01em", textAlign:"center", lineHeight:1.2 }}>{label}</span>
     </button>
   );
-  // Banner avance 10am/3pm (visible cerca de la hora)
-  const horaActual = (() => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); })();
-  const avanceAvisos = [
-    { label: "10:00 AM", hora: 10*60, fmt: mensajeAvanceFormat("10:00") },
-    { label: "3:00 PM",  hora: 15*60, fmt: mensajeAvanceFormat("15:00") },
-  ].filter(a => Math.abs(horaActual - a.hora) <= 120); // mostrar ±2 hs de la hora
-
   return (
     <div style={{ padding:16, paddingBottom:110 }}>
-      {avanceAvisos.map(a => (
-        <div key={a.label} className="card" style={{ padding:13, marginBottom:10, borderLeft:"4px solid var(--accent)", background:"linear-gradient(135deg, rgba(255,107,53,.06), rgba(255,107,53,.02))" }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8, marginBottom:7 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <span style={{ fontSize:18 }}>📊</span>
-              <div>
-                <div className="disp" style={{ fontSize:13.5 }}>Avance {a.label}</div>
-                <div style={{ fontSize:11.5, color:"var(--ink3)" }}>Hora de pedir el reporte al equipo</div>
-              </div>
-            </div>
-          </div>
-          <pre className="mono" style={{ whiteSpace:"pre-wrap", fontSize:11.5, margin:0, padding:9, background:"var(--surface)", borderRadius:7, color:"var(--ink2)", lineHeight:1.5, maxHeight:140, overflow:"auto" }}>{a.fmt}</pre>
-          <div style={{ display:"flex", gap:6, marginTop:8 }}>
-            <a href={"https://wa.me/?text=" + encodeURIComponent(a.fmt)} target="_blank" rel="noreferrer" className="btn" style={{ flex:1, background:"#25D366", color:"#fff", padding:9, textAlign:"center", textDecoration:"none", fontSize:12.5 }}>📱 WhatsApp</a>
-            <button onClick={async() => { try { await navigator.clipboard.writeText(a.fmt); alert("Mensaje copiado."); } catch { alert(a.fmt); } }} className="btn" style={{ flex:1, background:"var(--surface3)", color:"var(--ink)", padding:9, fontSize:12.5 }}>📋 Copiar</button>
-          </div>
-        </div>
-      ))}
+      <RecordatorioJornada obras={obras} log={jornadaLog} goJornada={goJornada} />
       {sinIA && (
         <div onClick={onAyudaIA} className="card glow-ia" style={{ padding:13, marginBottom:14, cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center", gap:10 }}>
           <div style={{ display:"flex", alignItems:"center", gap:11 }}>
@@ -2386,8 +2151,9 @@ function Inicio({ obras, visitas, notas, incidencias, decisiones, crono, cfg, pl
       </div>
 
       {/* Quick actions grid */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8, marginBottom:14 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:8, marginBottom:14 }}>
         <QA icon={MessageSquare} label="Nota" onClick={onQuickNota} color="var(--ia)" badge={notasPend.length} />
+        <QA icon={MessageCircle} label="Jornada" onClick={goJornada} color="var(--verde)" />
         <QA icon={AlertTriangle} label="Incid." onClick={goIncidencias} color="var(--ambar)" badge={incAbiertas} />
         <QA icon={CalendarClock} label="Mi semana" onClick={goAgenda} color="var(--cyan)" />
       </div>
@@ -2490,155 +2256,6 @@ function Inicio({ obras, visitas, notas, incidencias, decisiones, crono, cfg, pl
   );
 }
 
-/* ============================ DASHBOARD (gráficos CSS-based, sin librerías) ============================ */
-function DashboardScreen({ obras, visitas, incidencias, crono, zonas }) {
-  const today = hoy();
-  // === Métricas ===
-  const total = obras.length;
-  const conApertura = obras.filter(o => o.fechaApertura);
-  const proximas = conApertura.filter(o => { const d = diasPara(o.fechaApertura); return d != null && d >= 0 && d < 14; }).length;
-  const vencidas = conApertura.filter(o => { const d = diasPara(o.fechaApertura); return d != null && d < 0; }).length;
-  const incAbiertas = incidencias.filter(i => i.estado === "Abierta");
-  const incAltas = incAbiertas.filter(i => i.sev === "Alta").length;
-  const incMedias = incAbiertas.filter(i => i.sev === "Media").length;
-  const incBajas = incAbiertas.filter(i => i.sev === "Baja").length;
-
-  // Visitas últimos 14 días
-  const last14 = [];
-  for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); last14.push(d.toISOString().slice(0,10)); }
-  const visitasPorDia = last14.map(f => ({ fecha: f, n: visitas.filter(v => v.fecha === f).length }));
-  const maxVisDia = Math.max(1, ...visitasPorDia.map(x => x.n));
-
-  // Alerta por obra (última visita)
-  const ultVis = obras.map(o => { const vs = visitas.filter(v => v.obraId === o.id).sort((a,b)=>b.fecha.localeCompare(a.fecha)); return { obra: o, ult: vs[0] }; });
-  const alertasGlobal = { Verde: 0, Ámbar: 0, Rojo: 0, "Sin visita": 0 };
-  ultVis.forEach(({ ult }) => { if (!ult) alertasGlobal["Sin visita"]++; else alertasGlobal[ult.alerta || "Verde"]++; });
-
-  // Avance por obra
-  const avancePorObra = obras.map(o => ({ obra: o, av: computeAvanceObra(o.id, crono, zonas) })).sort((a,b) => b.av.pct - a.av.pct);
-
-  // Incidencias por obra (top 5)
-  const incPorObra = {};
-  incAbiertas.forEach(i => { incPorObra[i.obraId] = (incPorObra[i.obraId] || 0) + 1; });
-  const topIncObras = Object.entries(incPorObra).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([oid, n]) => ({ obra: obras.find(o => o.id === oid), n }));
-
-  const Bar = ({ value, max, color="var(--accent)", height=8 }) => (
-    <div style={{ height, background:"var(--surface3)", borderRadius:99, overflow:"hidden" }}>
-      <div style={{ width: max ? Math.min(100, value/max*100)+"%" : "0%", height:"100%", background: color, boxShadow:`0 0 6px ${color}55`, borderRadius:99, transition:"width .3s ease" }} />
-    </div>
-  );
-
-  return (
-    <div style={{ padding:14, paddingBottom:110 }}>
-      {/* KPIs principales */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:8, marginBottom:14 }}>
-        <div className="card" style={{ padding:11, textAlign:"center" }}>
-          <div className="disp grad-text" style={{ fontSize:22, lineHeight:1 }}>{total}</div>
-          <div className="lbl" style={{ marginBottom:0, fontSize:9 }}>Obras</div>
-        </div>
-        <div className="card" style={{ padding:11, textAlign:"center", borderColor: proximas ? "var(--ambar)" : "var(--border)" }}>
-          <div className="disp" style={{ fontSize:22, lineHeight:1, color: proximas ? "var(--ambar)" : "var(--ink)" }}>{proximas}</div>
-          <div className="lbl" style={{ marginBottom:0, fontSize:9 }}>Aper. &lt;14d</div>
-        </div>
-        <div className="card" style={{ padding:11, textAlign:"center", borderColor: vencidas ? "var(--rojo)" : "var(--border)" }}>
-          <div className="disp" style={{ fontSize:22, lineHeight:1, color: vencidas ? "var(--rojo)" : "var(--ink)" }}>{vencidas}</div>
-          <div className="lbl" style={{ marginBottom:0, fontSize:9 }}>Vencidas</div>
-        </div>
-        <div className="card" style={{ padding:11, textAlign:"center", borderColor: incAltas ? "var(--rojo)" : "var(--border)" }}>
-          <div className="disp" style={{ fontSize:22, lineHeight:1, color: incAltas ? "var(--rojo)" : "var(--ink)" }}>{incAbiertas.length}</div>
-          <div className="lbl" style={{ marginBottom:0, fontSize:9 }}>Incid. abiertas</div>
-        </div>
-      </div>
-
-      {/* Visitas por día */}
-      <Section title="Visitas — últimos 14 días" icon={CalendarRange}>
-        <div style={{ display:"flex", alignItems:"flex-end", gap:3, height:80, padding:"6px 0" }}>
-          {visitasPorDia.map((d, i) => {
-            const h = d.n > 0 ? Math.max(8, d.n / maxVisDia * 70) : 2;
-            const esHoy = d.fecha === today;
-            return (
-              <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:2 }} title={`${d.fecha}: ${d.n} visita(s)`}>
-                <div style={{ width:"100%", height: h, background: esHoy ? "var(--accent)" : d.n > 0 ? "var(--cyan)" : "var(--surface3)", borderRadius:"3px 3px 0 0", boxShadow: esHoy ? "0 0 8px var(--accent-glow)" : "none" }} />
-                <div className="mono" style={{ fontSize:8.5, color:"var(--ink3)" }}>{d.fecha.slice(8)}</div>
-              </div>
-            );
-          })}
-        </div>
-        <div className="mono" style={{ fontSize:10.5, color:"var(--ink3)", textAlign:"center", marginTop:5 }}>Total {visitasPorDia.reduce((a,x)=>a+x.n,0)} visitas · max {maxVisDia}/día</div>
-      </Section>
-
-      {/* Estado actual por obra (donut sustituto: barras) */}
-      <Section title="Estado actual de obras" icon={ShieldCheck}>
-        {[["Verde","var(--verde)"],["Ámbar","var(--ambar)"],["Rojo","var(--rojo)"],["Sin visita","var(--ink3)"]].map(([k, col]) => {
-          const v = alertasGlobal[k];
-          return (
-            <div key={k} style={{ marginBottom:8 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:3 }}>
-                <span style={{ color: col, fontWeight:600 }}>{k}</span>
-                <span className="mono" style={{ color:"var(--ink2)" }}>{v} obras</span>
-              </div>
-              <Bar value={v} max={total} color={col} />
-            </div>
-          );
-        })}
-      </Section>
-
-      {/* Incidencias por severidad */}
-      <Section title="Incidencias abiertas por severidad" icon={AlertTriangle}>
-        {[["Alta","var(--rojo)",incAltas],["Media","var(--ambar)",incMedias],["Baja","var(--cyan)",incBajas]].map(([k,col,v]) => (
-          <div key={k} style={{ marginBottom:8 }}>
-            <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:3 }}>
-              <span style={{ color: col, fontWeight:600 }}>{k}</span>
-              <span className="mono">{v}</span>
-            </div>
-            <Bar value={v} max={Math.max(1, incAbiertas.length)} color={col} />
-          </div>
-        ))}
-        {topIncObras.length > 0 && (
-          <>
-            <div className="lbl" style={{ marginTop:13, marginBottom:6 }}>Top obras con incidencias</div>
-            {topIncObras.map(({ obra, n }) => (
-              <div key={obra?.id} style={{ marginBottom:6 }}>
-                <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:2 }}>
-                  <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{obra?.nombre || "—"}</span>
-                  <span className="mono" style={{ color:"var(--rojo)", fontWeight:600 }}>{n}</span>
-                </div>
-                <Bar value={n} max={Math.max(...topIncObras.map(x => x.n))} color="var(--rojo)" height={5} />
-              </div>
-            ))}
-          </>
-        )}
-      </Section>
-
-      {/* Avance por obra */}
-      <Section title="Avance por obra" icon={BarChart3}>
-        <div style={{ fontSize:11.5, color:"var(--ink3)", marginBottom:8, lineHeight:1.45 }}>Calculado automáticamente promediando partidas del cronograma + zonas de cada obra.</div>
-        {avancePorObra.map(({ obra, av }) => {
-          if (av.count === 0) return (
-            <div key={obra.id} style={{ marginBottom:7 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", fontSize:11.5, marginBottom:2 }}>
-                <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{obra.nombre}</span>
-                <span className="mono" style={{ color:"var(--ink3)", fontStyle:"italic" }}>sin datos</span>
-              </div>
-              <Bar value={0} max={100} color="var(--ink3)" height={5} />
-            </div>
-          );
-          const col = av.pct < 30 ? "var(--rojo)" : av.pct < 70 ? "var(--ambar)" : "var(--verde)";
-          return (
-            <div key={obra.id} style={{ marginBottom:7 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", fontSize:11.5, marginBottom:2 }}>
-                <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{obra.nombre}</span>
-                <span className="mono" style={{ color: col, fontWeight:700 }}>{av.pct}%</span>
-              </div>
-              <Bar value={av.pct} max={100} color={col} height={5} />
-            </div>
-          );
-        })}
-      </Section>
-    </div>
-  );
-}
-
 /* ============================ SIDEBAR (drawer mobile + fijo desktop) ============================ */
 function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiertas=0, open=false, onClose=()=>{} }) {
   const SECCIONES = [
@@ -2650,12 +2267,13 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
       { k:"reportes",l:"Reportes",      Ico: FileText },
     ]},
     { titulo:"OPERACIÓN", items: [
-      { k:"dashboard",    l:"📊 Dashboard",         Ico: BarChart3 },
       { k:"cumplimiento", l:"Cumplimiento del día", Ico: CheckCircle2 },
+      { k:"jornada",      l:"Jornada WhatsApp",     Ico: MessageCircle },
       { k:"agenda",       l:"Mi semana",            Ico: CalendarRange },
       { k:"obras",        l:"Tiendas",              Ico: Building2 },
       { k:"incidencias",  l:"Incidencias",          Ico: AlertTriangle, badge: incidenciasAbiertas },
       { k:"personas",     l:"Directorio",           Ico: Users },
+      { k:"decisiones",   l:"Decisión de obra",     Ico: Mail },
     ]},
     { titulo:"IA / CONOCIMIENTO", items: [
       { k:"ia",      l:"Copiloto Claude", Ico: Sparkles },
@@ -2674,7 +2292,7 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
         <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:11, color:"#0a0d13", letterSpacing:"-.04em" }}>AS</div>
         <div style={{ flex:1 }}>
           <div className="disp" style={{ fontSize:14, lineHeight:1.1 }}>Arkym Sup</div>
-          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.3</div>
+          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.2</div>
         </div>
         <button onClick={onClose} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:7, padding:5, cursor:"pointer", color:"var(--ink2)", display:"flex", alignItems:"center" }} className="gld-sidebar-close" title="Cerrar menú"><X size={15} /></button>
       </div>
@@ -2753,14 +2371,6 @@ function App() {
     try { window.history.pushState({ tab: "inicio" }, "", "#inicio"); } catch {}
     return () => window.removeEventListener("popstate", onPop);
   }, [tab]);
-
-  // SCHEDULER notificaciones programadas (10am, 3pm avances) — chequeo cada 30s
-  useEffect(() => {
-    const tick = () => arkymCheckScheduledNotifs(cfg);
-    tick();
-    const t = setInterval(tick, 30000);
-    return () => clearInterval(t);
-  }, [cfg]);
 
   // UPDATE NOTIFICATION: chequear si hay nueva versión en el servidor cada 5 min
   useEffect(() => {
@@ -2937,8 +2547,8 @@ function App() {
   };
 
   const NAV = [["inicio","Inicio",Home],["visita","Visita",ClipboardCheck],["plan","Plan IA",CalendarClock],["obra","Obra",BarChart3],["reportes","Reportes",FileText]];
-  const titulos = { inicio:"Arkym Sup", visita:"Nueva visita", obra:"Obra", reportes:"Reportes", obras:"Tiendas", notas:"Notas / recordatorios", mas:"Más", config:"Ajustes", agenda:"Mi semana", personas:"Personas", incidencias:"Incidencias", ia:"Copiloto Claude", cerebro:"🧠 Cerebro", cumplimiento:"Cumplimiento del día", plan:"Plan IA", dashboard:"📊 Dashboard" };
-  const backTabs = ["config","agenda","personas","incidencias","ia","notas","obras","cerebro","cumplimiento","dashboard"];
+  const titulos = { inicio:"Arkym Sup", visita:"Nueva visita", obra:"Obra", reportes:"Reportes", obras:"Tiendas", notas:"Notas / recordatorios", mas:"Más", config:"Ajustes", decisiones:"Decisión de obra", jornada:"Jornada", agenda:"Mi semana", personas:"Personas", incidencias:"Incidencias", ia:"Copiloto Claude", cerebro:"🧠 Cerebro", cumplimiento:"Cumplimiento del día", plan:"Plan IA" };
+  const backTabs = ["config","decisiones","jornada","agenda","personas","incidencias","ia","notas","obras","cerebro","cumplimiento"];
 
   if (loading) return <div className="gld boot">Cargando…</div>;
 
@@ -2952,8 +2562,7 @@ function App() {
   else if (tab === "obra") body = <ObraHub obras={obras} obraId={selObra} setObraId={setSelObra} calidad={calidad} plan={plan} crono={crono} visitas={visitas} saveCal={saveCal} savePlan={savePlan} saveCrono={saveCrono} entregas={entregas} saveEntrega={saveEntrega} partidas={partidas} savePartida={savePartida} incidencias={incidencias} decisiones={decisiones} notas={notas} cronoDocs={cronoDocs} saveCronoDoc={saveCronoDoc} cerebro={cerebro} apiKey={cfg.anthKey} savePlanDiario={savePlanDiario} onUpdateVisita={async(v) => { const all = visitas.map(x => x.id === v.id ? v : x); setVisitas(all); await store.set("visitas", all); }} planosIdx={planosIdx} loadPlano={loadPlano} savePlano={savePlano} delPlano={delPlano} zonas={zonas} saveZonas={saveZonas} />;
   else if (tab === "cumplimiento") body = <CumplimientoScreen obras={obras} planesDiarios={planesDiarios} togglePlanItem={togglePlanItem} />;
   else if (tab === "reportes") body = <ReportesScreen obras={obras} visitas={visitas} incidencias={incidencias} decisiones={decisiones} saveIncidencias={saveIncidencias} cfg={cfg} crono={crono} saveVisita={async(v)=>{ const others=visitas.filter(x=>x.id!==v.id); const all=[...others,v]; setVisitas(all); await store.set("visitas", all); }} delVisita={async(id)=>{ const ni=visitas.filter(v=>v.id!==id); setVisitas(ni); await store.set("visitas", ni); const ic=incidencias.filter(x=>x.repId!==id); setIncidencias(ic); await store.set("incidencias", ic); }} apiKey={cfg.anthKey} zonas={zonas} cerebro={cerebro} />;
-  else if (tab === "obras") body = <ObrasScreen obras={obras} save={saveObras} onAbrirNota={(id)=>setQuickNota({ open:true, obraId:id })} crono={crono} zonas={zonas} />;
-  else if (tab === "dashboard") body = <DashboardScreen obras={obras} visitas={visitas} incidencias={incidencias} crono={crono} zonas={zonas} />;
+  else if (tab === "obras") body = <ObrasScreen obras={obras} save={saveObras} onAbrirNota={(id)=>setQuickNota({ open:true, obraId:id })} />;
   else if (tab === "notas") body = <NotasScreen obras={obras} notas={notas} save={saveNotas} />;
   else if (tab === "incidencias") body = <IncidenciasScreen obras={obras} incidencias={incidencias} save={saveIncidencias} cfg={cfg} cerebro={cerebro} apiKey={cfg.anthKey} />;
   else if (tab === "ia") {
@@ -3052,6 +2661,7 @@ function MasMenu({ setTab }) {
       { k:"cumplimiento", l:"Cumplimiento del día", sub:"Plan vigente + tracking", Ico:CheckCircle2, color:"var(--verde)" },
     ]},
     { titulo:"COMUNICACIÓN", items:[
+      { k:"jornada", l:"Jornada WhatsApp", sub:"Inicio / Medio / Fin", Ico:MessageCircle, color:"#25D366" },
       { k:"agenda", l:"Mi semana", sub:"Agenda de visitas + .ics", Ico:CalendarClock, color:"var(--cyan)" },
     ]},
     { titulo:"DATOS / SEGUIMIENTO", items:[
@@ -3222,7 +2832,7 @@ function JornadaScreen({ obras, log, save, cfg }) {
 /* ============================ DECISIONES DE OBRA ============================ */
 function decisionEmail(d, obra, cfg) {
   const to = [cfg.emailLogistica, cfg.emailGerencia].filter(Boolean).join(",");
-  const subj = `[Arkym] Decisión de obra — ${d.tipo} — ${obra?.nombre || ""}`;
+  const subj = `[GLD] Decisión de obra — ${d.tipo} — ${obra?.nombre || ""}`;
   const L = ["Estimados (Logística / Gerencia):", "",
     "En mi rol de Supervisor de Producción comunico la siguiente decisión tomada en obra:", "",
     `Obra: ${obra?.cliente || ""} · ${obra?.nombre || ""}`];
@@ -3647,37 +3257,6 @@ function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas,
   const [planTipo, setPlanTipo] = useState("");
   const [turnos, setTurnos] = useState("diurno");
   const [verDoc, setVerDoc] = useState(false);
-  const [analizando, setAnalizando] = useState(false);
-  const [analizado, setAnalizado] = useState(null);
-  const analizarCronoIA = async () => {
-    if (!apiKey) { alert("Necesitás API key de Claude para analizar (Ajustes)."); return; }
-    if (!cronoDoc?.data) { alert("Subí primero un cronograma (PDF o imagen)."); return; }
-    setAnalizando(true); setAnalizado(null);
-    const prompt = `Analizá el cronograma adjunto (Gantt/tabla/imagen) de la obra "${obra?.cliente} · ${obra?.nombre}". Extraé TODAS las partidas/actividades visibles con sus fechas de inicio y fin.\n\nDevolveme SOLO un JSON válido (sin texto extra, sin code fences), con esta estructura:\n{ "partidas": [ { "partida": "nombre partida", "inicio": "YYYY-MM-DD", "fin": "YYYY-MM-DD", "avance": 0, "resp": "" } ] }\n\nReglas:\n- Si una fecha es ambigua, deducila por contexto.\n- Si el cronograma muestra avance %, ponelo en "avance" (0-100), si no, dejá 0.\n- Si no hay responsable, dejá "" (string vacío).\n- Mantené nombres de partidas concisos pero claros.\n- NO inventes partidas que no estén en el documento.`;
-    const content = [];
-    if (cronoDoc.tipo === "pdf") content.push({ type:"document", source:{ type:"base64", media_type:"application/pdf", data: dataURLtoBase64(cronoDoc.data) } });
-    else content.push({ type:"image", source:{ type:"base64", media_type: dataURLmime(cronoDoc.data), data: dataURLtoBase64(cronoDoc.data) } });
-    content.push({ type:"text", text: prompt });
-    const t = await askClaude([{ role:"user", content }], apiKey, 3000);
-    setAnalizando(false);
-    try {
-      const m = t.match(/\{[\s\S]*\}/);
-      if (!m) throw new Error("Sin JSON detectado");
-      const j = JSON.parse(m[0]);
-      if (!Array.isArray(j.partidas)) throw new Error("Formato inválido");
-      setAnalizado(j.partidas);
-    } catch (e) {
-      alert("La IA no devolvió un JSON parseable. Respuesta:\n\n" + (t || "").slice(0, 400));
-    }
-  };
-  const aplicarAnalisis = () => {
-    if (!analizado) return;
-    const merge = (rows && rows.length) ? confirm(`Ya tenés ${rows.length} partidas. ¿Reemplazar TODO (OK) o agregar al final (Cancelar)?`) : true;
-    const nuevos = analizado.map(p => ({ id: uid(), partida: p.partida || "", inicio: p.inicio || hoy(), fin: p.fin || hoy(), avance: +p.avance || 0, resp: p.resp || "" }));
-    save(obraId, merge ? nuevos : [...rows, ...nuevos]);
-    setAnalizado(null);
-    alert(`✓ ${nuevos.length} partidas cargadas al cronograma editable.`);
-  };
   const subirCrono = async (e) => {
     const file = e.target.files?.[0]; e.target.value=""; if (!file) return;
     if (file.type === "application/pdf") {
@@ -3749,80 +3328,7 @@ function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas,
           <Upload size={15} style={{verticalAlign:-3}} /> {cronoDoc?.data ? "Reemplazar cronograma" : "Subir cronograma"}
           <input type="file" accept="application/pdf,image/*" onChange={subirCrono} style={{ display:"none" }} />
         </label>
-        {cronoDoc?.data && (
-          <button onClick={analizarCronoIA} disabled={analizando} className="btn" style={{ background:"linear-gradient(135deg, var(--ia), #c4b5fd)", color:"#fff", padding:11, width:"100%", marginTop:8 }}>
-            <Sparkles size={15} style={{verticalAlign:-3}} /> {analizando ? "Analizando con Claude…" : "🔍 Analizar cronograma adjunto con IA"}
-          </button>
-        )}
-        {analizado && (
-          <div className="card glow-ia" style={{ padding:12, marginTop:10, borderColor:"var(--ia)" }}>
-            <div className="disp" style={{ fontSize:13, marginBottom:7, color:"var(--ia)" }}>✓ IA detectó {analizado.length} partidas</div>
-            <div style={{ maxHeight:200, overflowY:"auto", marginBottom:9, padding:8, background:"var(--surface)", borderRadius:7 }}>
-              {analizado.map((p, i) => (
-                <div key={i} style={{ padding:"4px 0", borderBottom: i < analizado.length-1 ? "1px solid var(--border-soft)" : "none" }}>
-                  <div style={{ fontSize:12, color:"var(--ink)" }}>{p.partida}</div>
-                  <div className="mono" style={{ fontSize:10.5, color:"var(--ink3)" }}>{p.inicio} → {p.fin}{p.avance ? ` · ${p.avance}%` : ""}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display:"flex", gap:7 }}>
-              <button onClick={() => setAnalizado(null)} className="btn" style={{ flex:1, background:"var(--surface3)", color:"var(--ink)", padding:9, fontSize:12.5 }}>Cancelar</button>
-              <button onClick={aplicarAnalisis} className="btn" style={{ flex:2, background:"var(--verde)", color:"#fff", padding:9, fontSize:12.5, fontWeight:600 }}>📥 Cargar al cronograma editable</button>
-            </div>
-          </div>
-        )}
       </Section>
-      {(() => {
-        const today = hoy();
-        const todayD = new Date(today);
-        const activas = rows.filter(r => r.inicio && r.fin && r.inicio <= today && r.fin >= today);
-        const atrasadas = rows.filter(r => r.fin && r.fin < today && (+r.avance || 0) < 100);
-        const proximas = rows.filter(r => r.inicio && r.inicio > today).sort((a,b) => a.inicio.localeCompare(b.inicio)).slice(0, 3);
-        if (!activas.length && !atrasadas.length && !proximas.length) return null;
-        return (
-          <Section title="📅 Qué toca HOY" icon={CalendarClock}>
-            {atrasadas.length > 0 && (
-              <div style={{ marginBottom:10 }}>
-                <div className="lbl" style={{ color:"var(--rojo)", marginBottom:6 }}>🚨 Atrasadas ({atrasadas.length})</div>
-                {atrasadas.map(r => {
-                  const diasAtraso = Math.floor((todayD - new Date(r.fin)) / 86400000);
-                  return (
-                    <div key={r.id} className="card" style={{ padding:9, marginBottom:5, background:"rgba(244,63,94,.06)", borderLeft:"3px solid var(--rojo)" }}>
-                      <div style={{ fontSize:12.5, color:"var(--ink)", fontWeight:600 }}>{r.partida}</div>
-                      <div className="mono" style={{ fontSize:10.5, color:"var(--rojo)" }}>{r.avance || 0}% · {diasAtraso}d de atraso · debía terminar {r.fin}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            {activas.length > 0 && (
-              <div style={{ marginBottom:10 }}>
-                <div className="lbl" style={{ color:"var(--cyan)", marginBottom:6 }}>⚡ En ejecución hoy ({activas.length})</div>
-                {activas.map(r => (
-                  <div key={r.id} className="card" style={{ padding:9, marginBottom:5, background:"rgba(34,211,238,.06)", borderLeft:"3px solid var(--cyan)" }}>
-                    <div style={{ fontSize:12.5, color:"var(--ink)", fontWeight:600 }}>{r.partida}</div>
-                    <div className="mono" style={{ fontSize:10.5, color:"var(--cyan)" }}>{r.avance || 0}% · {r.inicio} → {r.fin}{r.resp ? " · "+r.resp : ""}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {proximas.length > 0 && (
-              <div>
-                <div className="lbl" style={{ color:"var(--ambar)", marginBottom:6 }}>⏭ Próximas a iniciar ({proximas.length})</div>
-                {proximas.map(r => {
-                  const diasParaInicio = Math.ceil((new Date(r.inicio) - todayD) / 86400000);
-                  return (
-                    <div key={r.id} className="card" style={{ padding:9, marginBottom:5, background:"rgba(245,158,11,.06)", borderLeft:"3px solid var(--ambar)" }}>
-                      <div style={{ fontSize:12.5, color:"var(--ink)", fontWeight:600 }}>{r.partida}</div>
-                      <div className="mono" style={{ fontSize:10.5, color:"var(--ambar)" }}>Inicia en {diasParaInicio}d ({r.inicio})</div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </Section>
-        );
-      })()}
       <Section title="Generar planificación con IA" icon={Sparkles}>
         <Field label="Turno de trabajo">
           <div style={{ display:"flex", gap:5 }}>
@@ -4247,7 +3753,7 @@ Sé técnico, expandí cada observación a frase profesional completa. No agregu
             )}
             <div style={{ display:"flex", gap:8 }}>
               <button onClick={async () => { const r = await shareOrCopy(informe.texto); alert(r === "copy" ? "Copiado." : "Listo."); }} className="btn" style={{ flex:1, background:"var(--surface3)", color:"var(--ink)", padding:11 }}><Copy size={14} style={{verticalAlign:-2}} /> Copiar</button>
-              <a href={mailtoHref("", `[Arkym] Informe de observaciones — ${obra.nombre} — Entrega ${d.meta.fechaEntrega}`, informe.texto)} className="btn" style={{ flex:1, background:"linear-gradient(135deg, var(--accent), #ff8855)", color:"#fff", padding:11, textAlign:"center", textDecoration:"none" }}><Mail size={14} style={{verticalAlign:-2}} /> Enviar</a>
+              <a href={mailtoHref("", `[GLD] Informe de observaciones — ${obra.nombre} — Entrega ${d.meta.fechaEntrega}`, informe.texto)} className="btn" style={{ flex:1, background:"linear-gradient(135deg, var(--accent), #ff8855)", color:"#fff", padding:11, textAlign:"center", textDecoration:"none" }}><Mail size={14} style={{verticalAlign:-2}} /> Enviar</a>
             </div>
           </>
         )}
@@ -4454,7 +3960,7 @@ Reglas: sé compacto. Cada línea importa. No repitas info entre secciones. No a
   const setEstado = (id, e) => save(incidencias.map(x => x.id === id ? { ...x, estado: e } : x));
   const del = (id) => save(incidencias.filter(x => x.id !== id));
   const commitAdd = () => { if (!add.desc.trim()) return alert("Describí la incidencia."); const o = obras.find(x => x.id === add.obraId); save([...incidencias, { ...add, id: uid(), repId: null, obraNombre: o?.nombre || "", cliente: o?.cliente || "" }]); setAdd(null); };
-  const texto = () => { const L = ["REPORTE DE INCIDENCIAS", `Filtro: ${fObra === "todas" ? "Todas las obras" : obras.find(o => o.id === fObra)?.nombre} · ${fEstado}`, ""]; lista.forEach(x => L.push(`• [${x.sev}] ${x.obraNombre} (${fmtFecha(x.fecha)}) — ${x.desc}${x.accion ? ` → ${x.accion}` : ""} [${x.estado}]`)); if (!lista.length) L.push("Sin incidencias."); return L.join("\n"); };
+  const texto = () => { const L = ["REPORTE DE INCIDENCIAS — GLD", `Filtro: ${fObra === "todas" ? "Todas las obras" : obras.find(o => o.id === fObra)?.nombre} · ${fEstado}`, ""]; lista.forEach(x => L.push(`• [${x.sev}] ${x.obraNombre} (${fmtFecha(x.fecha)}) — ${x.desc}${x.accion ? ` → ${x.accion}` : ""} [${x.estado}]`)); if (!lista.length) L.push("Sin incidencias."); return L.join("\n"); };
   if (add) return (
     <div style={{ padding:14 }}>
       <Section title="Nueva incidencia" icon={AlertTriangle}>
@@ -4495,7 +4001,7 @@ Reglas: sé compacto. Cada línea importa. No repitas info entre secciones. No a
         </div>
       ))}
       {!lista.length && <div style={{ textAlign:"center", color:"var(--ink2)", marginTop:20 }}>Sin incidencias con este filtro.</div>}
-      {lista.length > 0 && <div style={{ marginTop:12 }}><MailActions to={cfg.emailJefa || cfg.emailGerencia} subject={`[Arkym] Reporte de incidencias — ${fmtFecha(hoy())}`} body={texto()} /></div>}
+      {lista.length > 0 && <div style={{ marginTop:12 }}><MailActions to={cfg.emailJefa || cfg.emailGerencia} subject={`[GLD] Reporte de incidencias — ${fmtFecha(hoy())}`} body={texto()} /></div>}
       <Modal open={!!verReporte} onClose={() => { setVerReporte(null); setReporteIA(""); }} title="Informe de incidencia (IA)" maxWidth={560}>
         {reporteLoad && <div style={{ textAlign:"center", padding:30 }}><span className="dot" /><span className="dot" /><span className="dot" /><div style={{ marginTop:10, fontSize:12, color:"var(--ink2)" }}>Redactando informe ejecutivo…</div></div>}
         {reporteIA && (
@@ -4507,7 +4013,7 @@ Reglas: sé compacto. Cada línea importa. No repitas info entre secciones. No a
             <TArea value={reporteIA} onChange={e => setReporteIA(e.target.value)} rows={4} style={{ marginBottom:8 }} placeholder="Editá si querés ajustar antes de exportar" />
             <div style={{ display:"flex", gap:8, marginBottom:8 }}>
               <button onClick={async() => { const r = await shareOrCopy(reporteIA); alert(r === "copy" ? "Copiado." : "Listo."); }} className="btn" style={{ flex:1, background:"var(--surface3)", color:"var(--ink)", padding:11, fontSize:13 }}><Copy size={14} style={{verticalAlign:-2}} /> Copiar</button>
-              {verReporte && <a className="btn" href={mailtoHref(cfg.emailJefa || cfg.emailGerencia || "", `[Arkym] Informe de incidencia — ${obras.find(o=>o.id===verReporte.obraId)?.nombre || ""}`, reporteIA)} style={{ flex:1, background:"var(--accent)", color:"#fff", padding:11, textAlign:"center", textDecoration:"none", fontSize:13 }}><Mail size={14} style={{verticalAlign:-2}} /> Enviar</a>}
+              {verReporte && <a className="btn" href={mailtoHref(cfg.emailJefa || cfg.emailGerencia || "", `[GLD] Informe de incidencia — ${obras.find(o=>o.id===verReporte.obraId)?.nombre || ""}`, reporteIA)} style={{ flex:1, background:"var(--accent)", color:"#fff", padding:11, textAlign:"center", textDecoration:"none", fontSize:13 }}><Mail size={14} style={{verticalAlign:-2}} /> Enviar</a>}
             </div>
             {verReporte && (
               <div style={{ display:"flex", gap:8 }}>
@@ -4669,7 +4175,7 @@ ${texto}`;
               descargarExcelXML(`reporte-${obra?.nombre?.replace(/\s/g,"_")||"obra"}-${open.fecha}`, [{ nombre:"Reporte", headers, rows }]);
             }} style={{ flex:1, background:"#107c41", color:"#fff", padding:12, fontSize:13 }}>📊 Excel editable</button>
           </div>
-          <MailActions to={cfg.emailJefa || cfg.emailGerencia} subject={`[Arkym] Reporte diario — ${obra?.nombre || ""} — ${open.fecha}`} body={texto} />
+          <MailActions to={cfg.emailJefa || cfg.emailGerencia} subject={`[GLD] Reporte diario — ${obra?.nombre || ""} — ${open.fecha}`} body={texto} />
         </div>
         <Modal open={mejorado.open} onClose={() => setMejorado({ open:false, texto:"", load:false })} title="✨ Reporte mejorado con IA" maxWidth={620}>
           {mejorado.load && <div style={{ textAlign:"center", padding:30 }}><span className="dot" /><span className="dot" /><span className="dot" /><div style={{ marginTop:10, fontSize:12.5, color:"var(--ink2)" }}>Redactando versión ejecutiva con Claude…</div></div>}
@@ -4680,7 +4186,7 @@ ${texto}`;
               </div>
               <div style={{ display:"flex", gap:8 }}>
                 <button onClick={async () => { const r = await shareOrCopy(mejorado.texto); alert(r === "copy" ? "Copiado al portapapeles." : "Listo."); }} className="btn" style={{ flex:1, background:"var(--surface3)", color:"var(--ink)", padding:11 }}><Copy size={14} style={{verticalAlign:-2}} /> Copiar</button>
-                <a href={mailtoHref(cfg.emailJefa || cfg.emailGerencia || "", `[Arkym] Reporte diario — ${obra?.nombre || ""} — ${open.fecha}`, mejorado.texto)} className="btn" style={{ flex:1, background:"linear-gradient(135deg, var(--accent), #ff8855)", color:"#fff", padding:11, textAlign:"center", textDecoration:"none" }}><Mail size={14} style={{verticalAlign:-2}} /> Enviar</a>
+                <a href={mailtoHref(cfg.emailJefa || cfg.emailGerencia || "", `[GLD] Reporte diario — ${obra?.nombre || ""} — ${open.fecha}`, mejorado.texto)} className="btn" style={{ flex:1, background:"linear-gradient(135deg, var(--accent), #ff8855)", color:"#fff", padding:11, textAlign:"center", textDecoration:"none" }}><Mail size={14} style={{verticalAlign:-2}} /> Enviar</a>
               </div>
             </>
           )}
@@ -4718,7 +4224,7 @@ ${texto}`;
 }
 
 function reporteSemanalTexto(visitas, obras, desde, hasta) {
-  const L = [`REPORTE SEMANAL DE SUPERVISIÓN`, `Periodo: ${fmtFecha(desde)} a ${fmtFecha(hasta)}   |   Para: Jefatura de Proyectos`, ""];
+  const L = [`REPORTE SEMANAL DE SUPERVISIÓN — GLD`, `Periodo: ${fmtFecha(desde)} a ${fmtFecha(hasta)}   |   Para: Jefatura de Proyectos`, ""];
   const porObra = {}; visitas.forEach(r => { (porObra[r.obraId] = porObra[r.obraId] || []).push(r); });
   Object.entries(porObra).forEach(([oid, rs]) => { const obra = obras.find(o => o.id === oid); rs.sort((a, b) => a.fecha.localeCompare(b.fecha)); const ult = rs[rs.length - 1]; const dias = diasPara(obra?.fechaApertura); L.push(`■ ${obra?.cliente || ""} · ${obra?.nombre || "Obra"}`); if (dias != null) L.push(`   Apertura: ${obra.fechaApertura} (${dias >= 0 ? dias + " días" : "VENCIDA"})`); L.push(`   Visitas: ${rs.length}   |   Estado: ${ult.alerta.toUpperCase()}`); const desv = rs.filter(r => r.desviacion); const ries = rs.filter(r => r.riesgoCuello); const incA = rs.flatMap(r => r.incidencias.filter(i => i.sev === "Alta")); if (desv.length) L.push(`   Desviaciones: ${desv.map(r => r.desviacionNota).filter(Boolean).join(" / ")}`); if (ries.length) L.push(`   ⚠ Riesgos: ${ries.map(r => r.riesgoNota).filter(Boolean).join(" / ")}`); if (incA.length) L.push(`   Incidencias ALTAS: ${incA.map(i => i.desc).join(" / ")}`); if (ult.requerimientos) L.push(`   Adicionales: ${ult.requerimientos}`); if (ult.aiCritico) L.push(`   Análisis crítico: ${ult.aiCritico}`); else if (ult.resumen) L.push(`   Resumen: ${ult.resumen}`); L.push(""); });
   if (!visitas.length) L.push("Sin visitas en el periodo.");
@@ -4822,7 +4328,7 @@ function SemanalView({ obras, visitas, crono, incidencias, decisiones, cfg, apiK
               descargarExcelXML(`semanal-${desde}-a-${hasta}`, hojas);
             }} style={{ flex:1, background:"#107c41", color:"#fff", padding:12, fontSize:13 }}>📊 Excel</button>
           </div>
-          <MailActions to={cfg.emailJefa} subject={`[Arkym] Reporte semanal — ${desde} a ${hasta}`} body={texto + (ia ? "\n\n— RESUMEN IA —\n" + ia : "")} />
+          <MailActions to={cfg.emailJefa} subject={`[GLD] Reporte semanal — ${desde} a ${hasta}`} body={texto + (ia ? "\n\n— RESUMEN IA —\n" + ia : "")} />
         </div>
       </div>
     );

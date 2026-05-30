@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0a0d13" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>Arkym Sup · v13.6</title>
-<meta name="version" content="v13.6-crono-ia-avance" />
-<meta name="last-deploy" content="auto-deploy-2026-05-30g" />
+<title>Arkym Sup · v13.7</title>
+<meta name="version" content="v13.7-dashboard" />
+<meta name="last-deploy" content="auto-deploy-2026-05-30h" />
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Arkym%20Sup%22%2C%22short_name%22%3A%22Arkym%22%2C%22description%22%3A%22Supervisi%C3%B3n%20de%20producci%C3%B3n%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230a0d13%22%2C%22theme_color%22%3A%22%230a0d13%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520192%2520192%2522%253E%253Crect%2520width%253D%2522192%2522%2520height%253D%2522192%2522%2520rx%253D%252236%2522%2520fill%253D%2522%2523ff6b35%2522%252F%253E%253Ctext%2520x%253D%252296%2522%2520y%253D%2522118%2522%2520text-anchor%253D%2522middle%2522%2520font-family%253D%2522system-ui%2522%2520font-weight%253D%2522bold%2522%2520font-size%253D%252264%2522%2520fill%253D%2522%25230a0d13%2522%253EAS%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%23ff6b35'/%3E%3Ctext x='96' y='118' text-anchor='middle' font-family='system-ui' font-weight='bold' font-size='64' fill='%230a0d13'%3EAS%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -2658,6 +2658,151 @@ function Inicio({ obras, visitas, notas, incidencias, decisiones, crono, cfg, pl
   );
 }
 
+/* ============================ DASHBOARD (gráficos CSS-based, sin librerías) ============================ */
+function DashboardScreen({ obras, visitas, incidencias, crono, zonas }) {
+  const today = hoy();
+  const todayD = new Date(today);
+  // KPIs principales
+  const total = obras.length;
+  const conApertura = obras.filter(o => o.fechaApertura);
+  const proximas = conApertura.filter(o => { const d = diasPara(o.fechaApertura); return d != null && d >= 0 && d < 14; }).length;
+  const vencidas = conApertura.filter(o => { const d = diasPara(o.fechaApertura); return d != null && d < 0; }).length;
+  const incAbiertas = (incidencias||[]).filter(i => i.estado === "Abierta");
+  const incAltas = incAbiertas.filter(i => i.sev === "Alta").length;
+  const incMedias = incAbiertas.filter(i => i.sev === "Media").length;
+  const incBajas = incAbiertas.filter(i => i.sev === "Baja").length;
+  // Visitas últimos 14 días
+  const last14 = [];
+  for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); last14.push(d.toISOString().slice(0,10)); }
+  const visitasPorDia = last14.map(f => ({ fecha: f, n: (visitas||[]).filter(v => v.fecha === f).length }));
+  const maxVisDia = Math.max(1, ...visitasPorDia.map(x => x.n));
+  // Alerta por obra (última visita)
+  const ultVis = obras.map(o => { const vs = (visitas||[]).filter(v => v.obraId === o.id).sort((a,b)=>b.fecha.localeCompare(a.fecha)); return { obra: o, ult: vs[0] }; });
+  const alertasGlobal = { Verde: 0, "Ámbar": 0, Rojo: 0, "Sin visita": 0 };
+  ultVis.forEach(({ ult }) => { if (!ult) alertasGlobal["Sin visita"]++; else alertasGlobal[ult.alerta || "Verde"]++; });
+  // Avance por obra
+  const avancePorObra = obras.map(o => ({ obra: o, av: computeAvanceObra(o.id, crono, zonas) })).sort((a,b) => b.av.pct - a.av.pct);
+  // Top obras con incidencias
+  const incPorObra = {};
+  incAbiertas.forEach(i => { incPorObra[i.obraId] = (incPorObra[i.obraId] || 0) + 1; });
+  const topIncObras = Object.entries(incPorObra).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([oid, n]) => ({ obra: obras.find(o => o.id === oid), n }));
+
+  const Bar = ({ value, max, color="var(--accent)", height=8 }) => (
+    <div style={{ height, background:"var(--surface3)", borderRadius:99, overflow:"hidden" }}>
+      <div style={{ width: max ? Math.min(100, value/max*100)+"%" : "0%", height:"100%", background: color, boxShadow:`0 0 6px ${color}55`, borderRadius:99, transition:"width .3s ease" }} />
+    </div>
+  );
+  return (
+    <div style={{ padding:14, paddingBottom:110 }}>
+      {/* KPIs */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:8, marginBottom:14 }}>
+        <div className="card" style={{ padding:11, textAlign:"center" }}>
+          <div className="disp grad-text" style={{ fontSize:22, lineHeight:1 }}>{total}</div>
+          <div className="lbl" style={{ marginBottom:0, fontSize:9 }}>Obras</div>
+        </div>
+        <div className="card" style={{ padding:11, textAlign:"center", borderColor: proximas ? "var(--ambar)" : "var(--border)" }}>
+          <div className="disp" style={{ fontSize:22, lineHeight:1, color: proximas ? "var(--ambar)" : "var(--ink)" }}>{proximas}</div>
+          <div className="lbl" style={{ marginBottom:0, fontSize:9 }}>Aper. &lt;14d</div>
+        </div>
+        <div className="card" style={{ padding:11, textAlign:"center", borderColor: vencidas ? "var(--rojo)" : "var(--border)" }}>
+          <div className="disp" style={{ fontSize:22, lineHeight:1, color: vencidas ? "var(--rojo)" : "var(--ink)" }}>{vencidas}</div>
+          <div className="lbl" style={{ marginBottom:0, fontSize:9 }}>Vencidas</div>
+        </div>
+        <div className="card" style={{ padding:11, textAlign:"center", borderColor: incAltas ? "var(--rojo)" : "var(--border)" }}>
+          <div className="disp" style={{ fontSize:22, lineHeight:1, color: incAltas ? "var(--rojo)" : "var(--ink)" }}>{incAbiertas.length}</div>
+          <div className="lbl" style={{ marginBottom:0, fontSize:9 }}>Incid. abiertas</div>
+        </div>
+      </div>
+
+      {/* Visitas 14 días */}
+      <Section title="Visitas — últimos 14 días" icon={CalendarRange}>
+        <div style={{ display:"flex", alignItems:"flex-end", gap:3, height:80, padding:"6px 0" }}>
+          {visitasPorDia.map((d, i) => {
+            const h = d.n > 0 ? Math.max(8, d.n / maxVisDia * 70) : 2;
+            const esHoy = d.fecha === today;
+            return (
+              <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:2 }} title={d.fecha + ": " + d.n + " visita(s)"}>
+                <div style={{ width:"100%", height: h, background: esHoy ? "var(--accent)" : d.n > 0 ? "var(--cyan)" : "var(--surface3)", borderRadius:"3px 3px 0 0", boxShadow: esHoy ? "0 0 8px var(--accent-glow)" : "none" }} />
+                <div className="mono" style={{ fontSize:8.5, color:"var(--ink3)" }}>{d.fecha.slice(8)}</div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="mono" style={{ fontSize:10.5, color:"var(--ink3)", textAlign:"center", marginTop:5 }}>Total {visitasPorDia.reduce((a,x)=>a+x.n,0)} visitas · max {maxVisDia}/día</div>
+      </Section>
+
+      {/* Estado por obra (alertas) */}
+      <Section title="Estado actual de obras" icon={ShieldCheck}>
+        {[["Verde","var(--verde)"],["Ámbar","var(--ambar)"],["Rojo","var(--rojo)"],["Sin visita","var(--ink3)"]].map(([k, col]) => {
+          const v = alertasGlobal[k] || 0;
+          return (
+            <div key={k} style={{ marginBottom:8 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:3 }}>
+                <span style={{ color: col, fontWeight:600 }}>{k}</span>
+                <span className="mono" style={{ color:"var(--ink2)" }}>{v} obras</span>
+              </div>
+              <Bar value={v} max={total} color={col} />
+            </div>
+          );
+        })}
+      </Section>
+
+      {/* Incidencias */}
+      <Section title="Incidencias abiertas por severidad" icon={AlertTriangle}>
+        {[["Alta","var(--rojo)",incAltas],["Media","var(--ambar)",incMedias],["Baja","var(--cyan)",incBajas]].map(([k,col,v]) => (
+          <div key={k} style={{ marginBottom:8 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:3 }}>
+              <span style={{ color: col, fontWeight:600 }}>{k}</span>
+              <span className="mono">{v}</span>
+            </div>
+            <Bar value={v} max={Math.max(1, incAbiertas.length)} color={col} />
+          </div>
+        ))}
+        {topIncObras.length > 0 && (
+          <>
+            <div className="lbl" style={{ marginTop:13, marginBottom:6 }}>Top obras con incidencias</div>
+            {topIncObras.map(({ obra, n }) => (
+              <div key={obra?.id} style={{ marginBottom:6 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:2 }}>
+                  <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{obra?.nombre || "—"}</span>
+                  <span className="mono" style={{ color:"var(--rojo)", fontWeight:600 }}>{n}</span>
+                </div>
+                <Bar value={n} max={Math.max(...topIncObras.map(x => x.n))} color="var(--rojo)" height={5} />
+              </div>
+            ))}
+          </>
+        )}
+      </Section>
+
+      {/* Avance por obra */}
+      <Section title="Avance por obra" icon={BarChart3}>
+        <div style={{ fontSize:11.5, color:"var(--ink3)", marginBottom:8, lineHeight:1.45 }}>Calculado automáticamente promediando partidas del cronograma + zonas de cada obra.</div>
+        {avancePorObra.map(({ obra, av }) => {
+          if (av.count === 0) return (
+            <div key={obra.id} style={{ marginBottom:7 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:11.5, marginBottom:2 }}>
+                <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{obra.nombre}</span>
+                <span className="mono" style={{ color:"var(--ink3)", fontStyle:"italic" }}>sin datos</span>
+              </div>
+              <Bar value={0} max={100} color="var(--ink3)" height={5} />
+            </div>
+          );
+          const col = av.pct < 30 ? "var(--rojo)" : av.pct < 70 ? "var(--ambar)" : "var(--verde)";
+          return (
+            <div key={obra.id} style={{ marginBottom:7 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:11.5, marginBottom:2 }}>
+                <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{obra.nombre}</span>
+                <span className="mono" style={{ color: col, fontWeight:700 }}>{av.pct}%</span>
+              </div>
+              <Bar value={av.pct} max={100} color={col} height={5} />
+            </div>
+          );
+        })}
+      </Section>
+    </div>
+  );
+}
+
 /* ============================ SIDEBAR (drawer mobile + fijo desktop) ============================ */
 function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiertas=0, open=false, onClose=()=>{} }) {
   const SECCIONES = [
@@ -2669,6 +2814,7 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
       { k:"reportes",l:"Reportes",      Ico: FileText },
     ]},
     { titulo:"OPERACIÓN", items: [
+      { k:"dashboard",    l:"📊 Dashboard",         Ico: BarChart3 },
       { k:"cumplimiento", l:"Cumplimiento del día", Ico: CheckCircle2 },
       { k:"agenda",       l:"Mi semana",            Ico: CalendarRange },
       { k:"obras",        l:"Tiendas",              Ico: Building2 },
@@ -2692,7 +2838,7 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
         <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:11, color:"#0a0d13", letterSpacing:"-.04em" }}>AS</div>
         <div style={{ flex:1 }}>
           <div className="disp" style={{ fontSize:14, lineHeight:1.1 }}>Arkym Sup</div>
-          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.6</div>
+          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.7</div>
         </div>
         <button onClick={onClose} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:7, padding:5, cursor:"pointer", color:"var(--ink2)", display:"flex", alignItems:"center" }} className="gld-sidebar-close" title="Cerrar menú"><X size={15} /></button>
       </div>
@@ -2954,8 +3100,8 @@ function App() {
   };
 
   const NAV = [["inicio","Inicio",Home],["visita","Visita",ClipboardCheck],["plan","Plan IA",CalendarClock],["obra","Obra",BarChart3],["reportes","Reportes",FileText]];
-  const titulos = { inicio:"Arkym Sup", visita:"Nueva visita", obra:"Obra", reportes:"Reportes", obras:"Tiendas", notas:"Notas / recordatorios", mas:"Más", config:"Ajustes", decisiones:"Decisión de obra", jornada:"Jornada", agenda:"Mi semana", personas:"Personas", incidencias:"Incidencias", ia:"Copiloto Claude", cerebro:"🧠 Cerebro", cumplimiento:"Cumplimiento del día", plan:"Plan IA" };
-  const backTabs = ["config","decisiones","jornada","agenda","personas","incidencias","ia","notas","obras","cerebro","cumplimiento"];
+  const titulos = { inicio:"Arkym Sup", visita:"Nueva visita", obra:"Obra", reportes:"Reportes", obras:"Tiendas", notas:"Notas / recordatorios", mas:"Más", config:"Ajustes", decisiones:"Decisión de obra", jornada:"Jornada", agenda:"Mi semana", personas:"Personas", incidencias:"Incidencias", ia:"Copiloto Claude", cerebro:"🧠 Cerebro", cumplimiento:"Cumplimiento del día", plan:"Plan IA", dashboard:"📊 Dashboard" };
+  const backTabs = ["config","decisiones","jornada","agenda","personas","incidencias","ia","notas","obras","cerebro","cumplimiento","dashboard"];
 
   if (loading) return <div className="gld boot">Cargando…</div>;
 
@@ -2970,6 +3116,7 @@ function App() {
   else if (tab === "cumplimiento") body = <CumplimientoScreen obras={obras} planesDiarios={planesDiarios} togglePlanItem={togglePlanItem} />;
   else if (tab === "reportes") body = <ReportesScreen obras={obras} visitas={visitas} incidencias={incidencias} decisiones={decisiones} saveIncidencias={saveIncidencias} cfg={cfg} crono={crono} saveVisita={async(v)=>{ const others=visitas.filter(x=>x.id!==v.id); const all=[...others,v]; setVisitas(all); await store.set("visitas", all); }} delVisita={async(id)=>{ const ni=visitas.filter(v=>v.id!==id); setVisitas(ni); await store.set("visitas", ni); const ic=incidencias.filter(x=>x.repId!==id); setIncidencias(ic); await store.set("incidencias", ic); }} apiKey={cfg.anthKey} zonas={zonas} cerebro={cerebro} />;
   else if (tab === "obras") body = <ObrasScreen obras={obras} save={saveObras} onAbrirNota={(id)=>setQuickNota({ open:true, obraId:id })} crono={crono} cfg={cfg} zonas={zonas} />;
+  else if (tab === "dashboard") body = <DashboardScreen obras={obras} visitas={visitas} incidencias={incidencias} crono={crono} zonas={zonas} />;
   else if (tab === "notas") body = <NotasScreen obras={obras} notas={notas} save={saveNotas} />;
   else if (tab === "incidencias") body = <IncidenciasScreen obras={obras} incidencias={incidencias} save={saveIncidencias} cfg={cfg} cerebro={cerebro} apiKey={cfg.anthKey} />;
   else if (tab === "ia") {

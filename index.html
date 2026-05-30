@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0a0d13" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>Arkym Sup · v13.8</title>
-<meta name="version" content="v13.8-fases" />
-<meta name="last-deploy" content="auto-deploy-2026-05-30i" />
+<title>Arkym Sup · v13.9</title>
+<meta name="version" content="v13.9-copiloto-files" />
+<meta name="last-deploy" content="auto-deploy-2026-05-30j" />
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Arkym%20Sup%22%2C%22short_name%22%3A%22Arkym%22%2C%22description%22%3A%22Supervisi%C3%B3n%20de%20producci%C3%B3n%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230a0d13%22%2C%22theme_color%22%3A%22%230a0d13%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520192%2520192%2522%253E%253Crect%2520width%253D%2522192%2522%2520height%253D%2522192%2522%2520rx%253D%252236%2522%2520fill%253D%2522%2523ff6b35%2522%252F%253E%253Ctext%2520x%253D%252296%2522%2520y%253D%2522118%2522%2520text-anchor%253D%2522middle%2522%2520font-family%253D%2522system-ui%2522%2520font-weight%253D%2522bold%2522%2520font-size%253D%252264%2522%2520fill%253D%2522%25230a0d13%2522%253EAS%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%23ff6b35'/%3E%3Ctext x='96' y='118' text-anchor='middle' font-family='system-ui' font-weight='bold' font-size='64' fill='%230a0d13'%3EAS%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -2898,7 +2898,7 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
         <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:11, color:"#0a0d13", letterSpacing:"-.04em" }}>AS</div>
         <div style={{ flex:1 }}>
           <div className="disp" style={{ fontSize:14, lineHeight:1.1 }}>Arkym Sup</div>
-          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.8</div>
+          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.9</div>
         </div>
         <button onClick={onClose} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:7, padding:5, cursor:"pointer", color:"var(--ink2)", display:"flex", alignItems:"center" }} className="gld-sidebar-close" title="Cerrar menú"><X size={15} /></button>
       </div>
@@ -3183,7 +3183,7 @@ function App() {
     // Contexto contextual: detectar de qué pantalla venía el usuario
     const ctxKey = lastTab === "visita" ? "visita" : lastTab === "obra" ? "obra" : lastTab === "reportes" ? "reportes" : lastTab === "incidencias" ? "incidencias" : lastTab === "cerebro" ? "cerebro" : lastTab === "plan" ? "crono" : "inicio";
     const ctxData = ctxKey === "visita" ? editVisita : ctxKey === "obra" ? { obraId: selObra, obra: obras.find(o => o.id === selObra) } : null;
-    body = <IAChat obras={obras} visitas={visitas} notas={notas} incidencias={incidencias} decisiones={decisiones} crono={crono} cerebro={cerebro} apiKey={cfg.anthKey} contextKey={ctxKey} contextData={ctxData} zonas={zonas} />;
+    body = <IAChat obras={obras} visitas={visitas} notas={notas} incidencias={incidencias} decisiones={decisiones} crono={crono} cerebro={cerebro} apiKey={cfg.anthKey} contextKey={ctxKey} contextData={ctxData} zonas={zonas} saveCronoDoc={saveCronoDoc} savePlano={savePlano} />;
   }
   else if (tab === "plan") body = <PlanesIAScreen obras={obras} cronoDocs={cronoDocs} crono={crono} visitas={visitas} notas={notas} incidencias={incidencias} cerebro={cerebro} apiKey={cfg.anthKey} savePlanDiario={savePlanDiario} />;
   else if (tab === "cerebro") body = <CerebroScreen cerebro={cerebro} save={saveCerebro} apiKey={cfg.anthKey} />;
@@ -5234,18 +5234,87 @@ function detectarReporteIntent(texto, obras, visitas) {
   return { kind:"ok", visita, formato, obra: (obras||[]).find(o => o.id === visita.obraId) };
 }
 
-function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro=[], apiKey, contextKey="general", contextData=null, onContextAction, zonas={} }) {
+function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro=[], apiKey, contextKey="general", contextData=null, onContextAction, zonas={}, saveCronoDoc, savePlano }) {
   const promptsContextuales = getContextualPrompts(contextKey);
   const [msgs, setMsgs] = useState([{
     role:"assistant",
     content: contextKey === "general"
-      ? "Hola Renzo. Soy tu copiloto. Puedo: descargar reportes (decime 'descargá el reporte de Prescott del 29/05 en Word'), buscar info, generar planes, analizar visitas. Decime qué necesitás."
-      : `Estás en ${contextKey === "visita" ? "una visita" : contextKey === "obra" ? "una obra" : contextKey}. Acá abajo tenés acciones rápidas, o preguntame lo que necesités.`
+      ? "Hola Renzo. Soy tu copiloto. Puedo:\n• Descargar reportes (decime 'reporte de Prescott del 29/05 en Word')\n• Subir tu cronograma: tocá 📎 y decí 'es el cronograma de [obra]'\n• Subir planos: tocá 📎 y decí 'plano de arquitectura de [obra]'\n• Buscar info, generar planes, analizar visitas.\nDecime qué necesitás."
+      : "Estás en " + (contextKey === "visita" ? "una visita" : contextKey === "obra" ? "una obra" : contextKey) + ". Acá abajo tenés acciones rápidas, o preguntame lo que necesités."
   }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [attached, setAttached] = useState(null); // { nombre, tipo:"pdf"|"img", data:dataURL, size }
+  const [pendingAction, setPendingAction] = useState(null); // confirmación antes de ejecutar
+  const fileRef = useRef(null);
   const endRef = useRef(null);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior:"smooth" }); }, [msgs, loading]);
+
+  // Handler de archivo adjunto (PDF / imagen)
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0]; if (e.target) e.target.value = "";
+    if (!file) return;
+    try {
+      if (file.type === "application/pdf") {
+        const data = await fileToDataURL(file);
+        if (!data) return alert("No se pudo leer el PDF.");
+        if (data.length > 4_500_000) return alert("PDF muy grande (>3.3MB). Comprimilo o subí solo la hoja relevante.");
+        setAttached({ nombre: file.name, tipo:"pdf", data, size: file.size });
+      } else if (file.type.startsWith("image/")) {
+        const data = await compressImage(file, 1800, 0.75);
+        if (!data) return alert("No se pudo leer la imagen.");
+        setAttached({ nombre: file.name, tipo:"img", data, size: file.size });
+      } else {
+        alert("Subí un PDF o una imagen.");
+      }
+    } catch (err) { alert("Error al cargar: " + err.message); }
+  };
+
+  // Detector de intención sobre archivo + texto: identifica si es cronograma, plano, foto, etc.
+  const detectActionConArchivo = (texto, file, obras) => {
+    if (!file) return null;
+    const t = (texto || "").toLowerCase();
+    // Encontrar obra mencionada
+    let obraId = null;
+    for (const o of (obras||[])) {
+      const n = (o.nombre || "").toLowerCase();
+      if (n && n.length > 3 && t.includes(n)) { obraId = o.id; break; }
+      const palabras = n.split(/\s+/).filter(w => w.length > 4);
+      if (palabras.some(w => t.includes(w))) { obraId = o.id; break; }
+    }
+    if (!obraId) {
+      for (const o of (obras||[])) {
+        const c = (o.cliente || "").toLowerCase();
+        if (c && t.includes(c)) { obraId = o.id; break; }
+      }
+    }
+    const obra = obras.find(o => o.id === obraId);
+    // Clasificar tipo de documento
+    const esCronograma = /cronograma|gantt|programaci[oó]n|cronog/.test(t);
+    const especialidades = ["arquitectura","el[eé]ctric","sanitar","mec[aá]nic","a\\.a\\.|aire acond","mobiliario","g[oó]ndol","seguridad|liderman","dci|detecci[oó]n","estructura"];
+    const espMap = ["Arquitectura","Eléctricas","Sanitarias","Mecánico / A.A.","Mecánico / A.A.","Mobiliario / Góndolas","Mobiliario / Góndolas","LIDERMAN / Seguridad","DCI","Estructuras"];
+    let espDetectada = null;
+    for (let i=0; i<especialidades.length; i++) { if (new RegExp(especialidades[i]).test(t)) { espDetectada = espMap[i]; break; } }
+    const esPlano = /plano|isometr[ií]co|elevaci[oó]n|planta|detalle/.test(t) || espDetectada != null;
+    if (esCronograma) return { kind:"crono", obra, obraId };
+    if (esPlano) return { kind:"plano", obra, obraId, especialidad: espDetectada || "Arquitectura" };
+    return { kind:"desconocido", obra, obraId };
+  };
+
+  // Ejecutores
+  const ejecutarGuardarCrono = (obra, file) => {
+    if (!saveCronoDoc) { alert("Función de guardar no disponible."); return; }
+    saveCronoDoc(obra.id, { id: uid(), nombre: file.nombre, fecha: hoy(), tipo: file.tipo, data: file.data });
+    setMsgs(prev => [...prev, { role:"assistant", content: "✓ Cronograma guardado en " + obra.nombre + ".\nVas a verlo en Obra → Cronograma." }]);
+    setPendingAction(null); setAttached(null);
+  };
+  const ejecutarGuardarPlano = (obra, file, especialidad) => {
+    if (!savePlano) { alert("Función de guardar no disponible."); return; }
+    if (file.tipo !== "pdf") { alert("Los planos solo se aceptan en PDF."); return; }
+    savePlano(obra.id, { id: uid(), nombre: file.nombre.replace(/\.pdf$/i,""), fecha: hoy(), especialidad, version:"REV0", size: Math.round(file.size/1024) }, file.data);
+    setMsgs(prev => [...prev, { role:"assistant", content: "✓ Plano (" + especialidad + ") guardado en " + obra.nombre + ".\nVas a verlo en Obra → Planos." }]);
+    setPendingAction(null); setAttached(null);
+  };
 
   // Ejecutor de acciones de reporte
   const ejecutarDescargaReporte = (visita, obra, formato) => {
@@ -5281,8 +5350,41 @@ function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro
   };
 
   const send = async (q) => {
-    const p = (q ?? input).trim(); if (!p || loading) return;
-    setInput(""); const disp = [...msgs, { role:"user", content:p }]; setMsgs(disp); setLoading(true);
+    const p = (q ?? input).trim();
+    if (!p && !attached) return;
+    if (loading) return;
+    setInput("");
+    // Si hay archivo adjunto + texto: detectar acción
+    if (attached) {
+      const userMsg = (p || "Archivo adjunto: " + attached.nombre) + "\n📎 " + attached.nombre;
+      const disp = [...msgs, { role:"user", content: userMsg }];
+      setMsgs(disp);
+      const action = detectActionConArchivo(p, attached, obras);
+      if (action) {
+        if (action.kind === "crono" && action.obra) {
+          setMsgs([...disp, { role:"assistant", content: "📋 Detecté que es el **cronograma** de **" + action.obra.nombre + "** (" + action.obra.cliente + ").\n\n¿Guardarlo en la obra?" }]);
+          setPendingAction({ kind:"crono", obra: action.obra, file: attached });
+          return;
+        }
+        if (action.kind === "plano" && action.obra) {
+          setMsgs([...disp, { role:"assistant", content: "📐 Detecté que es un **plano** de **" + action.especialidad + "** para **" + action.obra.nombre + "** (" + action.obra.cliente + ").\n\n¿Guardarlo en la obra?" + (attached.tipo !== "pdf" ? "\n\n⚠ Los planos solo se aceptan en PDF. Subí el plano en PDF." : "") }]);
+          if (attached.tipo === "pdf") setPendingAction({ kind:"plano", obra: action.obra, file: attached, especialidad: action.especialidad });
+          else setAttached(null);
+          return;
+        }
+        if ((action.kind === "crono" || action.kind === "plano") && !action.obra) {
+          const obrasList = obras.slice(0, 12).map(o => "• " + o.nombre + " (" + o.cliente + ")").join("\n");
+          setMsgs([...disp, { role:"assistant", content: "Detecté que es un " + (action.kind === "crono" ? "cronograma" : "plano") + " pero no identifiqué la obra. Decime cuál es:\n\n" + obrasList + "\n\nEjemplo: \"es el cronograma de Aruma Prescott\"" }]);
+          return;
+        }
+        if (action.kind === "desconocido") {
+          setMsgs([...disp, { role:"assistant", content: "Veo el archivo **" + attached.nombre + "** pero no entendí qué hacer con él. Decime:\n• \"es el cronograma de [obra]\"\n• \"es el plano de arquitectura de [obra]\"\n• \"es el plano de eléctricas de [obra]\"\n\nO escribime tu mensaje sin archivo si querés solo consultar." }]);
+          return;
+        }
+      }
+      setAttached(null);
+    }
+    const disp = [...msgs, { role:"user", content:p }]; setMsgs(disp); setLoading(true);
     // 1) Detectar intent de descarga de reporte
     const intent = detectarReporteIntent(p, obras, visitas);
     if (intent) {
@@ -5365,10 +5467,35 @@ function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro
             </div>
           </>
         )}
+        {/* Confirmación de acción pendiente */}
+        {pendingAction && (
+          <div className="card glow-ia" style={{ padding:12, marginTop:10, borderColor:"var(--ia)", background:"rgba(167,139,250,.08)" }}>
+            <div style={{ fontSize:12.5, color:"var(--ia)", marginBottom:9, fontWeight:600 }}>
+              {pendingAction.kind === "crono" ? "📋 Guardar cronograma en " + pendingAction.obra.nombre : "📐 Guardar plano (" + pendingAction.especialidad + ") en " + pendingAction.obra.nombre}
+            </div>
+            <div style={{ display:"flex", gap:7 }}>
+              <button onClick={() => { setPendingAction(null); setAttached(null); setMsgs(prev => [...prev, { role:"assistant", content: "Cancelado." }]); }} className="btn" style={{ flex:1, background:"var(--surface3)", color:"var(--ink)", padding:9, fontSize:12.5 }}>Cancelar</button>
+              <button onClick={() => { if (pendingAction.kind === "crono") ejecutarGuardarCrono(pendingAction.obra, pendingAction.file); else if (pendingAction.kind === "plano") ejecutarGuardarPlano(pendingAction.obra, pendingAction.file, pendingAction.especialidad); }} className="btn" style={{ flex:2, background:"var(--verde)", color:"#fff", padding:9, fontSize:12.5, fontWeight:600 }}>✓ Guardar</button>
+            </div>
+          </div>
+        )}
         <div ref={endRef} />
       </div>
+      {/* Preview del archivo adjunto */}
+      {attached && !pendingAction && (
+        <div style={{ display:"flex", alignItems:"center", gap:9, padding:"9px 12px", background:"var(--surface2)", borderTop:"1px solid var(--border)", fontSize:12.5 }}>
+          <span style={{ fontSize:18 }}>{attached.tipo === "pdf" ? "📄" : "🖼"}</span>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", color:"var(--ink)" }}>{attached.nombre}</div>
+            <div className="mono" style={{ fontSize:10.5, color:"var(--ink3)" }}>{(attached.size/1024).toFixed(0)} KB · escribí qué hago con este archivo</div>
+          </div>
+          <button onClick={() => setAttached(null)} className="btn" style={{ background:"transparent", padding:5 }}><X size={15} color="var(--rojo)" /></button>
+        </div>
+      )}
       <div style={{ display:"flex", gap:8, padding:12, borderTop:"1px solid var(--border)", background:"var(--surface)" }}>
-        <input className="inp" placeholder="Pregunta o pedí un reporte…" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") send(); }} />
+        <input ref={fileRef} type="file" accept="application/pdf,image/*" onChange={handleFile} style={{ display:"none" }} />
+        <button onClick={() => fileRef.current && fileRef.current.click()} className="btn" title="Adjuntar PDF o imagen" style={{ background:"var(--surface3)", color:"var(--ink)", padding:"0 11px", fontSize:18 }}>📎</button>
+        <input className="inp" placeholder={attached ? "Decime qué hacer con el archivo (ej. 'es el cronograma de Prescott')" : "Pregunta o pedí un reporte…"} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") send(); }} />
         <button className="btn" onClick={() => send()} disabled={loading} style={{ background:"linear-gradient(135deg, var(--ia), #c4b5fd)", color:"#fff", padding:"0 16px" }}><Send size={18} /></button>
       </div>
     </div>

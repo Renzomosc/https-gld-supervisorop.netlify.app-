@@ -6,11 +6,11 @@
 <meta name="theme-color" content="#0a0d13" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>GLD Campo · v13.1</title>
-<meta name="version" content="v13.1-sidebar-zonas" />
-<meta name="last-deploy" content="auto-deploy-2026-05-30" />
-<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22GLD%20Campo%22%2C%22short_name%22%3A%22GLD%22%2C%22description%22%3A%22Supervisi%C3%B3n%20de%20producci%C3%B3n%20GLD%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230a0d13%22%2C%22theme_color%22%3A%22%230a0d13%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520192%2520192%2522%253E%253Crect%2520width%253D%2522192%2522%2520height%253D%2522192%2522%2520rx%253D%252236%2522%2520fill%253D%2522%2523ff6b35%2522%252F%253E%253Ctext%2520x%253D%252296%2522%2520y%253D%2522118%2522%2520text-anchor%253D%2522middle%2522%2520font-family%253D%2522system-ui%2522%2520font-weight%253D%2522bold%2522%2520font-size%253D%252264%2522%2520fill%253D%2522%25230a0d13%2522%253EGLD%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D" />
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%23ff6b35'/%3E%3Ctext x='96' y='118' text-anchor='middle' font-family='system-ui' font-weight='bold' font-size='64' fill='%230a0d13'%3EGLD%3C/text%3E%3C/svg%3E" />
+<title>Arkym Sup · v13.2</title>
+<meta name="version" content="v13.2-arkym" />
+<meta name="last-deploy" content="auto-deploy-2026-05-30b" />
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Arkym%20Sup%22%2C%22short_name%22%3A%22Arkym%22%2C%22description%22%3A%22Supervisi%C3%B3n%20de%20producci%C3%B3n%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230a0d13%22%2C%22theme_color%22%3A%22%230a0d13%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520192%2520192%2522%253E%253Crect%2520width%253D%2522192%2522%2520height%253D%2522192%2522%2520rx%253D%252236%2522%2520fill%253D%2522%2523ff6b35%2522%252F%253E%253Ctext%2520x%253D%252296%2522%2520y%253D%2522118%2522%2520text-anchor%253D%2522middle%2522%2520font-family%253D%2522system-ui%2522%2520font-weight%253D%2522bold%2522%2520font-size%253D%252264%2522%2520fill%253D%2522%25230a0d13%2522%253EAS%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D" />
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%23ff6b35'/%3E%3Ctext x='96' y='118' text-anchor='middle' font-family='system-ui' font-weight='bold' font-size='64' fill='%230a0d13'%3EAS%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <style>
@@ -100,22 +100,33 @@ input[type="time"]::-webkit-inner-spin-button, input[type="date"]::-webkit-inner
 }
 .boot{min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;color:var(--ink2);background:var(--bg)}
 .ico{display:inline-block;vertical-align:middle;width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-/* === Sidebar Notion-style (solo desktop) === */
-.gld-sidebar{display:none}
-.sb-item{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:8px;font-size:13.5px;color:var(--ink2);cursor:pointer;background:transparent;border:none;width:100%;text-align:left;font-family:'Space Grotesk',sans-serif;font-weight:500;letter-spacing:-.005em;position:relative;transition:background .12s ease, color .12s ease}
+/* === Sidebar Notion-style (mobile drawer + desktop fijo) === */
+.gld-sidebar{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:280px;max-width:85vw;background:linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);border-right:1px solid var(--border);z-index:30;padding:16px 10px 12px;overflow-y:auto;transform:translateX(-100%);transition:transform .25s ease;box-shadow:0 0 24px rgba(0,0,0,.4)}
+.gld-sidebar.open{transform:translateX(0)}
+.gld-sidebar-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:29;opacity:0;pointer-events:none;transition:opacity .25s ease}
+.gld-sidebar-backdrop.open{opacity:1;pointer-events:auto}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:8px;font-size:14px;color:var(--ink2);cursor:pointer;background:transparent;border:none;width:100%;text-align:left;font-family:'Space Grotesk',sans-serif;font-weight:500;letter-spacing:-.005em;position:relative;transition:background .12s ease, color .12s ease}
 .sb-item:hover{background:var(--surface2);color:var(--ink)}
 .sb-item.active{background:linear-gradient(90deg, rgba(255,107,53,.14), rgba(255,107,53,.04));color:var(--accent);font-weight:600}
 .sb-item.active::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--accent);border-radius:0 3px 3px 0}
 .sb-section{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:14px 11px 6px}
 .sb-badge{margin-left:auto;background:var(--cyan);color:#0a0d13;font-size:10px;font-weight:700;border-radius:99px;padding:1px 7px;min-width:18px;text-align:center}
+.gld-hamburger{background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--ink);padding:6px 8px;display:flex;align-items:center;justify-content:center}
 @media (min-width:1100px){
-  .gld-sidebar{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:248px;background:linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);border-right:1px solid var(--border);z-index:8;padding:16px 10px 12px;overflow-y:auto}
+  .gld-sidebar{transform:none;position:fixed;width:248px;box-shadow:none}
+  .gld-sidebar-backdrop{display:none !important}
+  .gld-hamburger{display:none !important}
   .gld-bottom-nav{display:none !important}
   .gld-fabs{display:none !important}
   .gld-content{margin-left:248px !important;max-width:none !important}
   .gld-content > main{max-width:780px;margin:0 auto}
   .gld-content > header{max-width:780px;margin:0 auto}
 }
+/* Banner de actualización */
+.update-banner{position:fixed;top:0;left:0;right:0;z-index:50;background:linear-gradient(135deg, var(--accent), #ff8855);color:#fff;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 4px 16px rgba(255,107,53,.4);animation:slidedn .35s ease}
+@keyframes slidedn{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.update-banner button{background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.3);color:#fff;padding:7px 14px;border-radius:7px;font-weight:600;cursor:pointer;font-size:13px;font-family:inherit}
+.update-banner button:hover{background:rgba(0,0,0,.4)}
 </style>
 <script type="importmap">
 {
@@ -128,7 +139,7 @@ input[type="time"]::-webkit-inner-spin-button, input[type="date"]::-webkit-inner
 <script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
 </head>
 <body>
-<div id="root"><div class="boot">Cargando GLD Campo…</div></div>
+<div id="root"><div class="boot">Cargando Arkym Sup…</div></div>
 
 <script type="text/babel" data-type="module" data-presets="react">
 import React, { useState, useEffect, useRef, useMemo } from "react";
@@ -447,8 +458,12 @@ const store = {
     const v = this._localGet(k);
     return v == null ? def : v;
   },
+  _setCounter: 0,
   async set(k, v) {
     if (!this._localSet(k, v)) { alert("Sin espacio en el navegador. Exportá respaldo y limpiá fotos viejas."); return false; }
+    // Snapshot cada 10 escrituras (no en cada una para no llenar localStorage)
+    this._setCounter = (this._setCounter || 0) + 1;
+    if (this._setCounter % 10 === 0) this._snapshot("auto-set");
     if (this._sb) {
       this._sbSet(k, v).then(ok => {
         if (ok) { this._lastSync = Date.now(); this._sbStatus = "online"; }
@@ -474,18 +489,62 @@ const store = {
       return { ok:false, msg: `Error ${r?.status}: ${err.slice(0, 200)}` };
     } catch (e) { this._sbStatus = "error"; this._notify(); return { ok:false, msg: e.message }; }
   },
+  // === SAFETY: detecta si un valor remoto está "vacío" (no debe sobreescribir local con datos) ===
+  _esVacio(v) {
+    if (v == null) return true;
+    if (Array.isArray(v) && v.length === 0) return true;
+    if (typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === 0) return true;
+    return false;
+  },
+  // Snapshot: backup atómico en localStorage para rollback (últimos 5)
+  _snapshot(motivo="auto") {
+    try {
+      const keys = this._localList("");
+      const dump = {};
+      for (const k of keys) {
+        if (k.startsWith("snapshot:")) continue;
+        if (k.startsWith("plano:")) continue; // planos son grandes (PDFs)
+        dump[k] = this._localGet(k);
+      }
+      const snap = { ts: Date.now(), motivo, dump };
+      const arr = JSON.parse(localStorage.getItem(PFX+"snapshot:list") || "[]");
+      arr.push(snap);
+      while (arr.length > 5) arr.shift();
+      localStorage.setItem(PFX+"snapshot:list", JSON.stringify(arr));
+    } catch (e) { console.warn("snapshot fail", e); }
+  },
+  getSnapshots() {
+    try { return JSON.parse(localStorage.getItem(PFX+"snapshot:list") || "[]"); } catch { return []; }
+  },
+  restoreSnapshot(ts) {
+    const arr = this.getSnapshots();
+    const snap = arr.find(s => s.ts === ts);
+    if (!snap) return false;
+    Object.entries(snap.dump).forEach(([k, v]) => this._localSet(k, v));
+    return true;
+  },
   async pullAll() {
     if (!this._sb) return { ok:false, count:0, msg:"Local only" };
     this._sbStatus = "syncing"; this._notify();
+    // Snapshot ANTES de sobreescribir nada
+    this._snapshot("pre-pull");
     const keys = await this._sbList();
     if (!keys) { this._sbStatus = "error"; this._notify(); return { ok:false, count:0, msg:"No se pudo listar" }; }
-    let count = 0;
+    let count = 0, skipped = 0;
     for (const k of keys) {
-      const v = await this._sbGet(k);
-      if (v !== undefined) { this._localSet(k, v); count++; }
+      const remoto = await this._sbGet(k);
+      if (remoto === undefined) continue;
+      // ANTI-PÉRDIDA: si remoto está vacío pero local tiene datos, NO sobreescribir
+      const local = this._localGet(k);
+      if (this._esVacio(remoto) && !this._esVacio(local)) {
+        skipped++;
+        continue;
+      }
+      this._localSet(k, remoto);
+      count++;
     }
     this._lastSync = Date.now(); this._sbStatus = "online"; this._notify();
-    return { ok:true, count };
+    return { ok:true, count, skipped };
   },
   async pushAll() {
     if (!this._sb) return { ok:false, count:0 };
@@ -1647,6 +1706,12 @@ function QuickNotaModal({ open, onClose, obras, defaultObraId, onSave }) {
 }
 
 /* ============================ OBRAS (CRUD) ============================ */
+// Auto-mapping cliente → empresa ejecutora (Platanitos=GLD, Aruma=RAD 415)
+const empresaPorCliente = (cliente) => {
+  if (cliente === "Platanitos") return "GLD";
+  if (cliente === "Aruma") return "RAD 415";
+  return "Otra";
+};
 function ObrasScreen({ obras, save, onAbrirNota }) {
   const [ed, setEd] = useState(null);
   const blank = { id: uid(), nombre:"", cliente:"Aruma", empresa:"RAD 415", direccion:"", m2:"", residente:"", pdr:"", horaInicio:"08:00", fechaInicio: hoy(), fechaApertura:"", etapa:"", arqCliente:"" };
@@ -1656,9 +1721,10 @@ function ObrasScreen({ obras, save, onAbrirNota }) {
       <Section title="Datos de la tienda" icon={Building2}>
         <Field label="Nombre / código"><TInput value={ed.nombre} onChange={e=>setEd({...ed, nombre:e.target.value})} placeholder="Ej. Aruma Prescott" /></Field>
         <div style={{ display:"flex", gap:10 }}>
-          <div style={{ flex:1 }}><Field label="Cliente"><Sel value={ed.cliente} onChange={e=>setEd({...ed, cliente:e.target.value})} options={CLIENTES} /></Field></div>
+          <div style={{ flex:1 }}><Field label="Cliente"><Sel value={ed.cliente} onChange={e=>{ const nuevoCliente = e.target.value; setEd({...ed, cliente: nuevoCliente, empresa: empresaPorCliente(nuevoCliente)}); }} options={CLIENTES} /></Field></div>
           <div style={{ flex:1 }}><Field label="Empresa ejecutora"><Sel value={ed.empresa} onChange={e=>setEd({...ed, empresa:e.target.value})} options={EMPRESAS_EJECUTORAS} /></Field></div>
         </div>
+        <div style={{ fontSize:11.5, color:"var(--cyan)", marginTop:-6, marginBottom:10, padding:"6px 9px", background:"rgba(34,211,238,.08)", border:"1px solid rgba(34,211,238,.25)", borderRadius:8 }}>💡 Auto: Platanitos → GLD · Aruma → RAD 415 (al cambiar el cliente)</div>
         <Field label="Dirección / local"><TInput value={ed.direccion} onChange={e=>setEd({...ed, direccion:e.target.value})} /></Field>
         <div style={{ display:"flex", gap:10 }}>
           <div style={{ flex:1 }}><Field label="m²"><TInput type="number" value={ed.m2} onChange={e=>setEd({...ed, m2:e.target.value})} /></Field></div>
@@ -1713,6 +1779,85 @@ function ObrasScreen({ obras, save, onAbrirNota }) {
 }
 
 /* ============================ CONFIG ============================ */
+// === Notificaciones del navegador (local Notification API) ===
+const arkymNotify = (titulo, opts={}) => {
+  try {
+    if (!("Notification" in window)) return false;
+    if (Notification.permission !== "granted") return false;
+    const n = new Notification(titulo, { icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%23ff6b35'/%3E%3Ctext x='96' y='118' text-anchor='middle' font-family='system-ui' font-weight='bold' font-size='64' fill='%230a0d13'%3EAS%3C/text%3E%3C/svg%3E", body: opts.body || "", tag: opts.tag || "arkym", ...opts });
+    if (opts.onClick) n.onclick = () => { window.focus(); opts.onClick(); n.close(); };
+    return true;
+  } catch { return false; }
+};
+function NotifBlock() {
+  const [perm, setPerm] = useState(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
+  const pedirPermiso = async () => {
+    if (!("Notification" in window)) { alert("Tu navegador no soporta notificaciones."); return; }
+    const r = await Notification.requestPermission();
+    setPerm(r);
+    if (r === "granted") arkymNotify("Notificaciones activas", { body: "Vas a recibir avisos de Arkym Sup acá.", tag: "test" });
+    else if (r === "denied") alert("Permisos bloqueados. Activalos manualmente desde el navegador (candado de la barra de direcciones).");
+  };
+  const probar = () => arkymNotify("🔔 Prueba", { body: "Si ves esto, las notificaciones funcionan.", tag: "test" });
+  if (perm === "unsupported") return <div style={{ fontSize:12, color:"var(--ambar)" }}>⚠ Tu navegador no soporta notificaciones del sistema. Probá con Chrome/Edge/Firefox.</div>;
+  if (perm === "granted") return (
+    <div>
+      <div style={{ padding:10, background:"rgba(16,185,129,.08)", border:"1px solid var(--verde)", borderRadius:8, fontSize:12.5, color:"var(--verde)", marginBottom:8 }}>✓ Notificaciones activadas</div>
+      <button onClick={probar} className="btn" style={{ background:"var(--surface3)", color:"var(--ink)", padding:11, width:"100%", fontSize:13 }}>🔔 Mandar notificación de prueba</button>
+      <div style={{ fontSize:11.5, color:"var(--ink3)", marginTop:8, lineHeight:1.5 }}>📱 <b>En celular</b>: instalá la app primero (Chrome → menú → "Instalar aplicación") para que las notificaciones funcionen incluso con el navegador cerrado.</div>
+    </div>
+  );
+  if (perm === "denied") return (
+    <div>
+      <div style={{ padding:10, background:"rgba(244,63,94,.08)", border:"1px solid var(--rojo)", borderRadius:8, fontSize:12.5, color:"var(--rojo)" }}>✗ Notificaciones bloqueadas. Hacé click en el candado de la URL → Permisos → Notificaciones → Permitir.</div>
+    </div>
+  );
+  return (
+    <button onClick={pedirPermiso} className="btn" style={{ background:"linear-gradient(135deg, var(--accent), #ff8855)", color:"#fff", padding:13, width:"100%", fontSize:13 }}>🔔 Activar notificaciones del navegador</button>
+  );
+}
+// === Snapshots: lista + restaurar ===
+function SnapshotsBlock({ reload }) {
+  const [snaps, setSnaps] = useState(store.getSnapshots());
+  const refresh = () => setSnaps(store.getSnapshots());
+  const restore = async (ts) => {
+    if (!confirm("Restaurar este respaldo SOBRESCRIBE los datos locales actuales (después sube a Supabase con 'Subir'). ¿Continuar?")) return;
+    const ok = store.restoreSnapshot(ts);
+    if (ok) { alert("Snapshot restaurado. Recargando…"); reload && reload(); }
+    else alert("No se pudo restaurar.");
+  };
+  const crear = () => { store._snapshot("manual"); refresh(); alert("Snapshot manual creado."); };
+  if (!snaps.length) return (
+    <div>
+      <div style={{ fontSize:12, color:"var(--ink3)", padding:9, background:"var(--surface)", borderRadius:8, marginBottom:8 }}>Sin snapshots todavía. Se crearán automáticamente con el uso.</div>
+      <button onClick={crear} className="btn" style={{ background:"var(--surface3)", color:"var(--ink)", padding:11, width:"100%", fontSize:12.5 }}>📸 Crear snapshot manual ahora</button>
+    </div>
+  );
+  return (
+    <div>
+      <button onClick={crear} className="btn" style={{ background:"var(--surface3)", color:"var(--ink)", padding:10, width:"100%", fontSize:12.5, marginBottom:8 }}>📸 Crear snapshot manual</button>
+      {[...snaps].reverse().map(s => {
+        const d = new Date(s.ts);
+        const keys = Object.keys(s.dump);
+        const obras = (s.dump.obras || []).length;
+        const vis = (s.dump.visitas || []).length;
+        const inc = (s.dump.incidencias || []).length;
+        return (
+          <div key={s.ts} className="card" style={{ padding:11, marginBottom:8, background:"var(--surface)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8 }}>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div className="disp" style={{ fontSize:13 }}>{d.toLocaleString("es-PE", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })}</div>
+                <div className="mono" style={{ fontSize:11, color:"var(--ink3)" }}>{s.motivo} · {keys.length} claves · {obras} obras · {vis} visitas · {inc} incid.</div>
+              </div>
+              <button onClick={() => restore(s.ts)} className="btn" style={{ background:"var(--cyan)", color:"#0a0d13", padding:"6px 11px", fontSize:11.5, fontWeight:600 }}>Restaurar</button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function ConfigScreen({ cfg, save, reload }) {
   const [c, setC] = useState(cfg);
   const [imp, setImp] = useState("");
@@ -1840,6 +1985,14 @@ function ConfigScreen({ cfg, save, reload }) {
         <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>Cargá las 7 obras Aruma/Platanitos y 24 personas del equipo (Brittnney, Alma, residentes RAD 415, arquitectos cliente, proveedores). <b>Solo agrega lo que falte</b> — no reemplaza tus datos.</div>
         <button onClick={cargarPlantilla} className="btn" style={{ background:"var(--ink2)", color:"var(--ink)", padding:11, width:"100%", marginBottom:6 }}><Upload size={14} style={{verticalAlign:-2}} /> Cargar plantilla del equipo (7 obras + 24 personas)</button>
         <button onClick={limpiarTodo} className="btn" style={{ background:"transparent", color:"var(--rojo)", padding:9, width:"100%", fontSize:12, border:"1px solid var(--rojo)" }}><Trash2 size={13} style={{verticalAlign:-2}} /> Borrar todos los datos (peligroso)</button>
+      </Section>
+      <Section title="🔔 Notificaciones del navegador" icon={Mail}>
+        <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>Activar para recibir avisos del navegador (incidencias críticas, recordatorios de jornada, plan IA listo). Funcionan estés o no en la pestaña, mientras el navegador esté abierto.</div>
+        <NotifBlock />
+      </Section>
+      <Section title="🛟 Respaldos automáticos (snapshots)" icon={Save}>
+        <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>La app guarda automáticamente un respaldo local antes de cada sincronización y cada 10 cambios. Si perdés data, restaurá desde acá.</div>
+        <SnapshotsBlock reload={reload} />
       </Section>
       <Section title="Respaldo de datos" icon={Save}>
         <div style={{ fontSize:12, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>Exportá TODA tu información (obras, visitas, notas…). Para <b>pasar datos entre celular y PC</b>: exportá en uno, abrí el .json en el otro e importalo. Es manual pero funciona ya.</div>
@@ -2103,8 +2256,8 @@ function Inicio({ obras, visitas, notas, incidencias, decisiones, crono, cfg, pl
   );
 }
 
-/* ============================ SIDEBAR (desktop) ============================ */
-function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiertas=0 }) {
+/* ============================ SIDEBAR (drawer mobile + fijo desktop) ============================ */
+function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiertas=0, open=false, onClose=()=>{} }) {
   const SECCIONES = [
     { titulo: null, items: [
       { k:"inicio",  l:"Inicio",        Ico: Home },
@@ -2132,13 +2285,16 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
     ]},
   ];
   return (
-    <aside className="gld-sidebar">
+    <>
+    <div className={"gld-sidebar-backdrop" + (open ? " open" : "")} onClick={onClose} />
+    <aside className={"gld-sidebar" + (open ? " open" : "")}>
       <div style={{ display:"flex", alignItems:"center", gap:10, padding:"6px 11px 16px", borderBottom:"1px solid var(--border-soft)", marginBottom:8 }}>
-        <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:12, color:"#0a0d13", letterSpacing:"-.04em" }}>GLD</div>
-        <div>
-          <div className="disp" style={{ fontSize:14, lineHeight:1.1 }}>GLD Campo</div>
-          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.1</div>
+        <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:11, color:"#0a0d13", letterSpacing:"-.04em" }}>AS</div>
+        <div style={{ flex:1 }}>
+          <div className="disp" style={{ fontSize:14, lineHeight:1.1 }}>Arkym Sup</div>
+          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.2</div>
         </div>
+        <button onClick={onClose} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:7, padding:5, cursor:"pointer", color:"var(--ink2)", display:"flex", alignItems:"center" }} className="gld-sidebar-close" title="Cerrar menú"><X size={15} /></button>
       </div>
       {SECCIONES.map((sec, si) => (
         <div key={si} style={{ marginBottom: si === SECCIONES.length - 1 ? 0 : 4 }}>
@@ -2147,7 +2303,7 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
             const active = tab === it.k;
             const Ico = it.Ico;
             return (
-              <button key={it.k} className={"sb-item" + (active ? " active" : "")} onClick={() => setTab(it.k)}>
+              <button key={it.k} className={"sb-item" + (active ? " active" : "")} onClick={() => { setTab(it.k); onClose(); }}>
                 <Ico size={15} strokeWidth={active ? 2.4 : 1.9} />
                 <span style={{ flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{it.l}</span>
                 {it.badge > 0 && <span className="sb-badge">{it.badge}</span>}
@@ -2168,6 +2324,7 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
         );
       })()}
     </aside>
+    </>
   );
 }
 
@@ -2176,7 +2333,61 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [tab, _setTab] = useState("inicio");
   const [lastTab, setLastTab] = useState("inicio");
-  const setTab = (newTab) => { setLastTab(prev => tab === "ia" ? prev : tab); _setTab(newTab); };
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [updateAvail, setUpdateAvail] = useState(false);
+  const backExitRef = useRef(0);
+  const setTab = (newTab) => {
+    setLastTab(prev => tab === "ia" ? prev : tab);
+    _setTab(newTab);
+    // History API: cada cambio de tab agrega entrada para que botón atrás funcione
+    try { window.history.pushState({ tab: newTab }, "", "#" + newTab); } catch {}
+  };
+
+  // BACK BUTTON: cuando el usuario va atrás (Android, gesto, browser back) → ir a inicio. Doble back en inicio = salir.
+  useEffect(() => {
+    const onPop = (e) => {
+      if (tab !== "inicio") {
+        _setTab("inicio");
+        try { window.history.pushState({ tab: "inicio" }, "", "#inicio"); } catch {}
+      } else {
+        // En inicio: si apretó atrás otra vez dentro de 2s, dejar que salga (no pushear)
+        const now = Date.now();
+        if (now - backExitRef.current < 2000) {
+          // dejar pasar (el navegador / sistema cerrará la app)
+          return;
+        }
+        backExitRef.current = now;
+        try { window.history.pushState({ tab: "inicio" }, "", "#inicio"); } catch {}
+        // Toast: avisar al usuario
+        const t = document.createElement("div");
+        t.style.cssText = "position:fixed;bottom:120px;left:50%;transform:translateX(-50%);background:rgba(10,13,19,.95);color:#fff;padding:11px 18px;border-radius:24px;font-size:13px;z-index:9999;border:1px solid var(--accent);font-family:'Space Grotesk',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,.5)";
+        t.textContent = "Presioná atrás otra vez para salir";
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 1900);
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    // Asegurar que haya al menos 1 entrada en history al cargar para que back funcione
+    try { window.history.pushState({ tab: "inicio" }, "", "#inicio"); } catch {}
+    return () => window.removeEventListener("popstate", onPop);
+  }, [tab]);
+
+  // UPDATE NOTIFICATION: chequear si hay nueva versión en el servidor cada 5 min
+  useEffect(() => {
+    const ownVersion = document.querySelector('meta[name="version"]')?.getAttribute("content") || "";
+    const check = async () => {
+      try {
+        const r = await fetch(location.pathname + "?_=" + Date.now(), { cache: "no-store" });
+        if (!r.ok) return;
+        const txt = await r.text();
+        const m = txt.match(/<meta\s+name=["']version["']\s+content=["']([^"']+)["']/);
+        if (m && m[1] && m[1] !== ownVersion) setUpdateAvail(true);
+      } catch {}
+    };
+    const t = setInterval(check, 5 * 60 * 1000);
+    setTimeout(check, 30000); // primer check a los 30s
+    return () => clearInterval(t);
+  }, []);
   const [obras, setObras] = useState([]);
   const [visitas, setVisitas] = useState([]);
   const [notas, setNotas] = useState([]);
@@ -2336,7 +2547,7 @@ function App() {
   };
 
   const NAV = [["inicio","Inicio",Home],["visita","Visita",ClipboardCheck],["plan","Plan IA",CalendarClock],["obra","Obra",BarChart3],["reportes","Reportes",FileText]];
-  const titulos = { inicio:"GLD Campo", visita:"Nueva visita", obra:"Obra", reportes:"Reportes", obras:"Tiendas", notas:"Notas / recordatorios", mas:"Más", config:"Ajustes", decisiones:"Decisión de obra", jornada:"Jornada", agenda:"Mi semana", personas:"Personas", incidencias:"Incidencias", ia:"Copiloto Claude", cerebro:"🧠 Cerebro", cumplimiento:"Cumplimiento del día", plan:"Plan IA" };
+  const titulos = { inicio:"Arkym Sup", visita:"Nueva visita", obra:"Obra", reportes:"Reportes", obras:"Tiendas", notas:"Notas / recordatorios", mas:"Más", config:"Ajustes", decisiones:"Decisión de obra", jornada:"Jornada", agenda:"Mi semana", personas:"Personas", incidencias:"Incidencias", ia:"Copiloto Claude", cerebro:"🧠 Cerebro", cumplimiento:"Cumplimiento del día", plan:"Plan IA" };
   const backTabs = ["config","decisiones","jornada","agenda","personas","incidencias","ia","notas","obras","cerebro","cumplimiento"];
 
   if (loading) return <div className="gld boot">Cargando…</div>;
@@ -2358,7 +2569,7 @@ function App() {
     // Contexto contextual: detectar de qué pantalla venía el usuario
     const ctxKey = lastTab === "visita" ? "visita" : lastTab === "obra" ? "obra" : lastTab === "reportes" ? "reportes" : lastTab === "incidencias" ? "incidencias" : lastTab === "cerebro" ? "cerebro" : lastTab === "plan" ? "crono" : "inicio";
     const ctxData = ctxKey === "visita" ? editVisita : ctxKey === "obra" ? { obraId: selObra, obra: obras.find(o => o.id === selObra) } : null;
-    body = <IAChat obras={obras} visitas={visitas} notas={notas} incidencias={incidencias} decisiones={decisiones} crono={crono} cerebro={cerebro} apiKey={cfg.anthKey} contextKey={ctxKey} contextData={ctxData} />;
+    body = <IAChat obras={obras} visitas={visitas} notas={notas} incidencias={incidencias} decisiones={decisiones} crono={crono} cerebro={cerebro} apiKey={cfg.anthKey} contextKey={ctxKey} contextData={ctxData} zonas={zonas} />;
   }
   else if (tab === "plan") body = <PlanesIAScreen obras={obras} cronoDocs={cronoDocs} crono={crono} visitas={visitas} notas={notas} incidencias={incidencias} cerebro={cerebro} apiKey={cfg.anthKey} savePlanDiario={savePlanDiario} />;
   else if (tab === "cerebro") body = <CerebroScreen cerebro={cerebro} save={saveCerebro} apiKey={cfg.anthKey} />;
@@ -2373,13 +2584,26 @@ function App() {
   const incidAbiertasCount = (incidencias||[]).filter(x=>x.estado==="Abierta").length;
   return (
     <>
-    <Sidebar tab={tab} setTab={(k)=>{ if(k==="visita") setEditVisita(null); setTab(k); }} syncStatus={syncStatus} notasPendientes={notasPendCount} incidenciasAbiertas={incidAbiertasCount} />
-    <div className="gld gld-content" style={{ minHeight:"100vh", maxWidth:520, margin:"0 auto" }}>
-      <header className="hide-print" style={{ position:"sticky", top:0, zIndex:10, background:"rgba(10,13,19,.85)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", borderBottom:"1px solid var(--border)", padding:"14px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+    {updateAvail && (
+      <div className="update-banner hide-print">
+        <div style={{ display:"flex", alignItems:"center", gap:9, flex:1, minWidth:0 }}>
+          <Sparkles size={17} />
+          <div>
+            <div style={{ fontWeight:700, fontSize:13.5 }}>Hay una versión nueva disponible</div>
+            <div style={{ fontSize:11, opacity:.85 }}>Tocá Actualizar para refrescar (no perdés datos)</div>
+          </div>
+        </div>
+        <button onClick={() => { setUpdateAvail(false); location.reload(); }}>Actualizar</button>
+      </div>
+    )}
+    <Sidebar tab={tab} setTab={(k)=>{ if(k==="visita") setEditVisita(null); setTab(k); }} syncStatus={syncStatus} notasPendientes={notasPendCount} incidenciasAbiertas={incidAbiertasCount} open={sidebarOpen} onClose={()=>setSidebarOpen(false)} />
+    <div className="gld gld-content" style={{ minHeight:"100vh", maxWidth:520, margin:"0 auto", paddingTop: updateAvail ? 56 : 0 }}>
+      <header className="hide-print" style={{ position:"sticky", top: updateAvail ? 56 : 0, zIndex:10, background:"rgba(10,13,19,.85)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", borderBottom:"1px solid var(--border)", padding:"14px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          {backTabs.includes(tab) && <button onClick={()=>setTab("mas")} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:8, cursor:"pointer", padding:5, display:"flex", alignItems:"center", justifyContent:"center" }}><ChevronLeft color="var(--ink)" size={18} /></button>}
-          {!backTabs.includes(tab) && <div style={{ width:24, height:24, borderRadius:7, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:11, color:"#0a0d13", letterSpacing:"-.04em" }}>GLD</div>}
-          <div className="disp" style={{ fontSize:17 }}>{titulos[tab] || "GLD Campo"}</div>
+          <button onClick={() => setSidebarOpen(true)} className="gld-hamburger" title="Menú"><Layers size={17} /></button>
+          {backTabs.includes(tab) && <button onClick={()=>setTab("inicio")} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:8, cursor:"pointer", padding:5, display:"flex", alignItems:"center", justifyContent:"center" }}><ChevronLeft color="var(--ink)" size={18} /></button>}
+          {!backTabs.includes(tab) && <div style={{ width:24, height:24, borderRadius:7, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:10, color:"#0a0d13", letterSpacing:"-.04em" }}>AS</div>}
+          <div className="disp" style={{ fontSize:17 }}>{titulos[tab] || "Arkym Sup"}</div>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:7 }}>
           {syncStatus.configured && (() => {
@@ -4192,28 +4416,151 @@ function getContextualPrompts(contextKey) {
   return C[contextKey] || C.general;
 }
 
-function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro=[], apiKey, contextKey="general", contextData=null, onContextAction }) {
+// Detector de intent: "envíame el reporte de X obra del Y fecha en Word/Excel/PDF"
+function detectarReporteIntent(texto, obras, visitas) {
+  const t = (texto || "").toLowerCase();
+  const wantsReport = /(reporte|informe)/.test(t);
+  const wantsAction = /(descarg|env[íi]|m[áa]ndam|d[aá]me|necesit|quier|p[áa]same|gener|export)/.test(t);
+  if (!wantsReport || !wantsAction) return null;
+  let formato = "word";
+  if (/excel|xls|hoja/.test(t)) formato = "excel";
+  else if (/pdf|imprim/.test(t)) formato = "pdf";
+  else if (/word|\.doc|documento\s*editab/.test(t)) formato = "word";
+  let obraId = null;
+  for (const o of (obras||[])) {
+    const n = (o.nombre || "").toLowerCase();
+    if (n && n.length > 3 && t.includes(n)) { obraId = o.id; break; }
+    // Por palabra suelta del nombre (ej. "prescott")
+    const palabras = n.split(/\s+/).filter(w => w.length > 4);
+    if (palabras.some(w => t.includes(w))) { obraId = o.id; break; }
+  }
+  if (!obraId) {
+    for (const o of (obras||[])) {
+      const c = (o.cliente || "").toLowerCase();
+      if (c && t.includes(c)) { obraId = o.id; break; }
+    }
+  }
+  let fecha = null;
+  const dmy = t.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+  if (dmy) {
+    const d = dmy[1].padStart(2,"0"); const m = dmy[2].padStart(2,"0");
+    let y = dmy[3] || String(new Date().getFullYear());
+    if (y.length === 2) y = "20" + y;
+    fecha = `${y}-${m}-${d}`;
+  }
+  const iso = t.match(/(20\d{2})-(\d{2})-(\d{2})/); if (iso) fecha = `${iso[1]}-${iso[2]}-${iso[3]}`;
+  if (/\bhoy\b/.test(t)) fecha = hoy();
+  if (/\bayer\b/.test(t)) { const d = new Date(); d.setDate(d.getDate()-1); fecha = d.toISOString().slice(0,10); }
+  let visita = null;
+  const cands = (visitas||[]).filter(v => (!obraId || v.obraId === obraId) && (!fecha || v.fecha === fecha));
+  if (cands.length) visita = cands.sort((a,b) => b.fecha.localeCompare(a.fecha))[0];
+  else if (obraId) { const all = (visitas||[]).filter(v => v.obraId === obraId).sort((a,b)=>b.fecha.localeCompare(a.fecha)); visita = all[0]; }
+  if (!visita) return { kind:"no-encontrado", obraId, fecha, formato };
+  return { kind:"ok", visita, formato, obra: (obras||[]).find(o => o.id === visita.obraId) };
+}
+
+function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro=[], apiKey, contextKey="general", contextData=null, onContextAction, zonas={} }) {
   const promptsContextuales = getContextualPrompts(contextKey);
   const [msgs, setMsgs] = useState([{
     role:"assistant",
     content: contextKey === "general"
-      ? "Hola Renzo. Soy tu copiloto. Preguntame por el estado de tus obras, tardanzas, prioridades o pedime que genere reportes / análisis / planes."
+      ? "Hola Renzo. Soy tu copiloto. Puedo: descargar reportes (decime 'descargá el reporte de Prescott del 29/05 en Word'), buscar info, generar planes, analizar visitas. Decime qué necesitás."
       : `Estás en ${contextKey === "visita" ? "una visita" : contextKey === "obra" ? "una obra" : contextKey}. Acá abajo tenés acciones rápidas, o preguntame lo que necesités.`
   }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const endRef = useRef(null);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior:"smooth" }); }, [msgs, loading]);
+
+  // Ejecutor de acciones de reporte
+  const ejecutarDescargaReporte = (visita, obra, formato) => {
+    const texto = reporteDiarioTexto(visita, obra, zonas[visita.obraId] || []);
+    const nombreBase = `reporte-${obra?.nombre?.replace(/\s/g,"_")||"obra"}-${visita.fecha}`;
+    if (formato === "word") {
+      const allFotos = [
+        ...(visita.fachadaFotos||[]).map(p=>({...p, sec:"Fachada"})),
+        ...(visita.eppFotos||[]).map(p=>({...p, sec:"EPP"})),
+        ...(visita.procesosFotos||[]).map(p=>({...p, sec:"Procesos"})),
+        ...PARTIDAS_AVANCE.flatMap(([k,l]) => (visita.avancePartidas?.[k]?.fotos||[]).map(p=>({...p, sec:l}))),
+        ...(visita.fotos||[]).map(p=>({...p, sec:"General"}))
+      ];
+      descargarWord(nombreBase, `Reporte Diario · ${obra?.nombre} · ${fmtFecha(visita.fecha)}`, texto, allFotos);
+    } else if (formato === "excel") {
+      const personalTotal = (visita.cuadrillas||[]).reduce((a,c) => a + (+c.personas || 0), 0);
+      const rows = [
+        { Sección:"Datos", Item:"Obra", Valor: obra?.nombre || "" },
+        { Sección:"Datos", Item:"Cliente", Valor: obra?.cliente || "" },
+        { Sección:"Datos", Item:"Fecha", Valor: visita.fecha },
+        { Sección:"Datos", Item:"Supervisor", Valor: visita.supervisor || "" },
+        { Sección:"Datos", Item:"Alerta", Valor: visita.alerta || "" },
+        { Sección:"KPIs", Item:"Personal", Valor: personalTotal },
+      ];
+      (visita.cuadrillas||[]).forEach((c, i) => rows.push({ Sección:"Subcontratistas", Item: c.frente || `Frente ${i+1}`, Valor: c.llego === false ? `NO LLEGÓ${c.motivoNoLlego ? " — "+c.motivoNoLlego : ""}` : `${c.personas||0} pers · ${c.horaLlegada||c.hora||"—"}` }));
+      PARTIDAS_AVANCE.forEach(([k, l]) => { const ap = visita.avancePartidas?.[k]; if (ap && ap.notas) rows.push({ Sección:"Avance", Item: l, Valor: ap.notas }); });
+      (visita.incidencias||[]).forEach((c) => rows.push({ Sección:"Incidencias", Item: `[${c.sev}]`, Valor: c.desc + (c.accion ? " → "+c.accion : "") }));
+      descargarExcelXML(nombreBase, [{ nombre:"Reporte", headers:["Sección","Item","Valor"], rows }]);
+    } else if (formato === "pdf") {
+      // Para PDF, mostramos mensaje (window.print solo funciona desde la pantalla del reporte)
+      alert("Para PDF: andá a Reportes → tocá el reporte → tocá 'PDF' (botón naranja).");
+    }
+  };
+
   const send = async (q) => {
     const p = (q ?? input).trim(); if (!p || loading) return;
     setInput(""); const disp = [...msgs, { role:"user", content:p }]; setMsgs(disp); setLoading(true);
-    // Contexto base + contextData específico de la pantalla
+    // 1) Detectar intent de descarga de reporte
+    const intent = detectarReporteIntent(p, obras, visitas);
+    if (intent) {
+      if (intent.kind === "ok") {
+        const { visita, obra, formato } = intent;
+        const fechaTxt = fmtFecha(visita.fecha);
+        const txtFormato = formato === "excel" ? "Excel editable" : formato === "pdf" ? "PDF" : "Word editable";
+        setMsgs([...disp, {
+          role:"assistant",
+          content: `✓ Encontré el reporte de ${obra?.nombre} (${obra?.cliente}) del ${fechaTxt}.\nFormato detectado: ${txtFormato}.\n\nTocá el botón abajo para descargarlo:`,
+          actions: [
+            { label: `📄 Descargar Word`, fn: () => ejecutarDescargaReporte(visita, obra, "word"), color:"#2b579a" },
+            { label: `📊 Descargar Excel`, fn: () => ejecutarDescargaReporte(visita, obra, "excel"), color:"#107c41" },
+          ]
+        }]);
+        setLoading(false);
+        return;
+      } else if (intent.kind === "no-encontrado") {
+        const obra = (obras||[]).find(o => o.id === intent.obraId);
+        const detalles = [obra ? `obra "${obra.nombre}"` : "obra (no identificada)", intent.fecha ? `fecha ${fmtFecha(intent.fecha)}` : "fecha (no especificada)"].join(" · ");
+        setMsgs([...disp, { role:"assistant", content: `No encontré un reporte para: ${detalles}. ¿Querés que liste las visitas disponibles? Decime "lista visitas de Prescott" o pasame la fecha exacta (formato 29/05).` }]);
+        setLoading(false);
+        return;
+      }
+    }
+    // 2) Intent: listar visitas de obra X
+    const listMatch = /list(?:a|ame|á)\s+(?:las?\s+)?visitas?(?:\s+de)?\s+(.+)/i.exec(p);
+    if (listMatch) {
+      const target = listMatch[1].toLowerCase().trim();
+      const obra = (obras||[]).find(o => (o.nombre||"").toLowerCase().includes(target) || (o.cliente||"").toLowerCase().includes(target));
+      if (obra) {
+        const vs = (visitas||[]).filter(v => v.obraId === obra.id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+        if (vs.length === 0) {
+          setMsgs([...disp, { role:"assistant", content: `No hay visitas registradas para ${obra.nombre}.` }]);
+        } else {
+          const lista = vs.slice(0, 12).map(v => `• ${fmtFecha(v.fecha)} — alerta ${v.alerta || "—"}`).join("\n");
+          setMsgs([...disp, {
+            role:"assistant",
+            content: `Visitas de ${obra.nombre} (${vs.length} total):\n${lista}\n\nDecime "descargá el reporte del [fecha] en Word" para bajarlo.`,
+            actions: vs.slice(0, 5).map(v => ({ label: `📄 Word ${v.fecha}`, fn: () => ejecutarDescargaReporte(v, obra, "word"), color:"#2b579a" }))
+          }]);
+        }
+        setLoading(false);
+        return;
+      }
+    }
+    // 3) Llamada normal a Claude
     const baseCtx = { obras: obras?.length ? obras : [], visitas: (visitas||[]).map(({fotos,fachadaFotos,eppFotos,procesosFotos,avancePartidas,...r}) => r).slice(0,15), notas: notas||[], incidencias: incidencias||[], decisiones: decisiones||[], crono: crono||{} };
     const ctx = JSON.stringify(baseCtx);
     const ctxSpecific = contextData ? `\n\nDATOS ESPECÍFICOS DE LA PANTALLA ACTUAL (${contextKey}):\n${JSON.stringify(contextData).slice(0, 8000)}` : "";
     const cb = cerebroContexto(cerebro, p);
-    const sys = `Eres el copiloto de Renzo Moscol (Supervisor de Producción GLD, fit-out retail Aruma/Platanitos en Perú). Respondé en español, técnico, directo y conciso (sin floreo, sin 'antecedentes' largos, solo lo justo y necesario). Usá los datos provistos. Si la pregunta es de generar un reporte/plan/análisis, devolvé el texto listo para enviar. Si es exploratoria, respondé con bullets breves.${cb ? "\n\nCONOCIMIENTO DEL CEREBRO:\n"+cb : ""}\n\nCONTEXTO GLOBAL:\n${ctx}${ctxSpecific}`;
-    const call = [{ role:"user", content: sys }, { role:"assistant", content:"Listo, tengo el contexto. ¿Qué necesitás?" }, ...disp];
+    const sys = `Eres el copiloto de Renzo Moscol (Supervisor de Producción, fit-out retail Aruma/Platanitos en Perú). Renzo trabaja con la empresa GLD (que ejecuta obras de Platanitos) y supervisa RAD 415 (que ejecuta obras de Aruma). Respondé en español, técnico, directo y conciso (sin floreo, sin 'antecedentes' largos). Usá los datos provistos. Si la pregunta es de generar un reporte/plan/análisis, devolvé el texto listo para enviar. Si el usuario pide "descargar/enviar reporte de tal obra del tal día en Word/Excel/PDF", recordale que esa acción la podés ejecutar directamente — tiene que decirlo claro con obra + fecha (ej: "descargá el reporte de Prescott del 29/05 en Word").${cb ? "\n\nCONOCIMIENTO DEL CEREBRO:\n"+cb : ""}\n\nCONTEXTO GLOBAL:\n${ctx}${ctxSpecific}`;
+    const call = [{ role:"user", content: sys }, { role:"assistant", content:"Listo, tengo el contexto. ¿Qué necesitás?" }, ...disp.map(m => ({ role: m.role, content: m.content }))];
     const t = await askClaude(call, apiKey, 2000);
     setMsgs([...disp, { role:"assistant", content: t }]); setLoading(false);
   };
@@ -4222,7 +4569,16 @@ function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro
       <div style={{ flex:1, overflowY:"auto", padding:14 }}>
         {msgs.map((m, i) => (
           <div key={i} style={{ display:"flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", marginBottom:10 }}>
-            <div style={{ maxWidth:"88%", padding:"10px 13px", borderRadius:14, fontSize:14, lineHeight:1.5, whiteSpace:"pre-wrap", background: m.role === "user" ? "var(--accent)" : "var(--surface2)", color: m.role === "user" ? "#fff" : "var(--ink)", border: m.role === "user" ? "none" : "1px solid var(--border)" }}>{m.content}</div>
+            <div style={{ maxWidth:"88%" }}>
+              <div style={{ padding:"10px 13px", borderRadius:14, fontSize:14, lineHeight:1.5, whiteSpace:"pre-wrap", background: m.role === "user" ? "var(--accent)" : "var(--surface2)", color: m.role === "user" ? "#fff" : "var(--ink)", border: m.role === "user" ? "none" : "1px solid var(--border)" }}>{m.content}</div>
+              {m.actions && m.actions.length > 0 && (
+                <div style={{ display:"flex", gap:6, marginTop:7, flexWrap:"wrap" }}>
+                  {m.actions.map((a, ai) => (
+                    <button key={ai} className="btn" onClick={a.fn} style={{ background: a.color || "var(--accent)", color:"#fff", padding:"8px 12px", fontSize:12.5, fontWeight:600 }}>{a.label}</button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ))}
         {loading && <div style={{ display:"flex", gap:4, padding:"6px 4px" }}><span className="dot" /><span className="dot" /><span className="dot" /></div>}

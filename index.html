@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0a0d13" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>Arkym Sup · v13.4</title>
-<meta name="version" content="v13.4-payloads-claude" />
-<meta name="last-deploy" content="auto-deploy-2026-05-30e" />
+<title>Arkym Sup · v13.5</title>
+<meta name="version" content="v13.5-diagnostico-sb" />
+<meta name="last-deploy" content="auto-deploy-2026-05-30f" />
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Arkym%20Sup%22%2C%22short_name%22%3A%22Arkym%22%2C%22description%22%3A%22Supervisi%C3%B3n%20de%20producci%C3%B3n%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230a0d13%22%2C%22theme_color%22%3A%22%230a0d13%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520192%2520192%2522%253E%253Crect%2520width%253D%2522192%2522%2520height%253D%2522192%2522%2520rx%253D%252236%2522%2520fill%253D%2522%2523ff6b35%2522%252F%253E%253Ctext%2520x%253D%252296%2522%2520y%253D%2522118%2522%2520text-anchor%253D%2522middle%2522%2520font-family%253D%2522system-ui%2522%2520font-weight%253D%2522bold%2522%2520font-size%253D%252264%2522%2520fill%253D%2522%25230a0d13%2522%253EAS%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%23ff6b35'/%3E%3Ctext x='96' y='118' text-anchor='middle' font-family='system-ui' font-weight='bold' font-size='64' fill='%230a0d13'%3EAS%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1830,6 +1830,87 @@ const arkymNotify = (titulo, opts={}) => {
     return true;
   } catch { return false; }
 };
+// === Diagnóstico Supabase: listar todas las claves remotas con tamaño + restaurar individual ===
+function DiagnosticoSupabase({ reload }) {
+  const [items, setItems] = useState(null);
+  const [load, setLoad] = useState(false);
+  const [filtro, setFiltro] = useState("");
+  const [ver, setVer] = useState(null);
+  const [err, setErr] = useState("");
+  const cargar = async () => {
+    setLoad(true); setItems(null); setErr("");
+    try {
+      if (!store._sb) { setErr("Supabase no está configurado. Cargá URL + Anon key arriba y guardá."); setLoad(false); return; }
+      const r = await store._sbReq("/kv?select=key,value,updated_at&order=updated_at.desc");
+      if (!r || !r.ok) { setErr("No se pudo listar (HTTP " + (r ? r.status : "?") + "). Probá 'Probar conexión' arriba."); setLoad(false); return; }
+      const data = await r.json();
+      const enriched = data.map(row => {
+        let json = ""; try { json = JSON.stringify(row.value || {}); } catch (e) { json = ""; }
+        const esArr = Array.isArray(row.value);
+        const esObj = !esArr && typeof row.value === "object" && row.value !== null;
+        return {
+          key: row.key,
+          updated_at: row.updated_at,
+          size: json.length,
+          esArr, esObj,
+          count: esArr ? row.value.length : (esObj ? Object.keys(row.value).length : 0),
+          full: row.value,
+        };
+      });
+      setItems(enriched);
+    } catch (e) { setErr("Error: " + e.message); }
+    setLoad(false);
+  };
+  const restaurarKey = (it) => {
+    if (!confirm("Restaurar la clave \"" + it.key + "\" desde Supabase al local? Esto sobrescribe lo que haya en este dispositivo.")) return;
+    try {
+      store._localSet(it.key, it.full);
+      alert("Clave \"" + it.key + "\" restaurada localmente. Recargando…");
+      reload && reload();
+    } catch (e) { alert("Error al restaurar: " + e.message); }
+  };
+  const lista = items ? items.filter(i => !filtro || i.key.toLowerCase().includes(filtro.toLowerCase())) : [];
+  return (
+    <div>
+      <button onClick={cargar} disabled={load} className="btn" style={{ background:"var(--cyan)", color:"#0a0d13", padding:11, width:"100%", fontWeight:600 }}>{load ? "Cargando…" : "🔍 Listar TODAS las claves en Supabase"}</button>
+      {err && <div style={{ marginTop:9, padding:9, background:"rgba(244,63,94,.08)", border:"1px solid var(--rojo)", borderRadius:8, fontSize:12, color:"var(--rojo)" }}>{err}</div>}
+      {items && (
+        <div style={{ marginTop:10 }}>
+          <div style={{ fontSize:12, color:"var(--ink2)", marginBottom:6 }}>{items.length} clave(s) en el servidor. Filtrá por nombre (ej. "prescott", "crono", "planos", "entrega"):</div>
+          <TInput value={filtro} onChange={e => setFiltro(e.target.value)} placeholder="Filtrar por nombre de clave..." />
+          <div style={{ marginTop:8, maxHeight:380, overflowY:"auto" }}>
+            {lista.map(it => (
+              <div key={it.key} className="card" style={{ padding:9, marginBottom:6, background:"var(--surface)" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:6 }}>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div className="mono" style={{ fontSize:12, fontWeight:600, color:"var(--ink)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{it.key}</div>
+                    <div className="mono" style={{ fontSize:10.5, color:"var(--ink3)" }}>{it.esArr ? "array · " + it.count + " items" : it.esObj ? "obj · " + it.count + " keys" : "valor"} · {(it.size/1024).toFixed(1)} KB · {new Date(it.updated_at).toLocaleString("es-PE",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</div>
+                  </div>
+                  <button onClick={() => setVer(it)} className="btn" style={{ background:"var(--surface3)", color:"var(--ink)", padding:"5px 9px", fontSize:11 }}>Ver</button>
+                  <button onClick={() => restaurarKey(it)} className="btn" style={{ background:"var(--verde)", color:"#fff", padding:"5px 9px", fontSize:11, fontWeight:600 }}>Restaurar</button>
+                </div>
+              </div>
+            ))}
+            {!lista.length && <div style={{ textAlign:"center", fontSize:12, color:"var(--ink3)", padding:14 }}>Sin claves que coincidan con el filtro.</div>}
+          </div>
+        </div>
+      )}
+      <Modal open={!!ver} onClose={() => setVer(null)} title={ver?.key || ""} maxWidth={640}>
+        {ver && (
+          <>
+            <div style={{ fontSize:11.5, color:"var(--ink3)", marginBottom:8 }}>Tamaño: {(ver.size/1024).toFixed(2)} KB · Actualizado: {new Date(ver.updated_at).toLocaleString("es-PE")}</div>
+            <pre className="mono" style={{ background:"var(--bg)", padding:10, borderRadius:8, fontSize:11, maxHeight:"55vh", overflow:"auto", whiteSpace:"pre-wrap", color:"var(--ink)", border:"1px solid var(--border)" }}>{JSON.stringify(ver.full, null, 2)}</pre>
+            <div style={{ display:"flex", gap:8, marginTop:10 }}>
+              <button onClick={async () => { try { await navigator.clipboard.writeText(JSON.stringify(ver.full, null, 2)); alert("JSON copiado."); } catch (e) {} }} className="btn" style={{ flex:1, background:"var(--surface3)", color:"var(--ink)", padding:10 }}>📋 Copiar JSON</button>
+              <button onClick={() => { restaurarKey(ver); setVer(null); }} className="btn" style={{ flex:1, background:"var(--verde)", color:"#fff", padding:10, fontWeight:600 }}>↩ Restaurar al local</button>
+            </div>
+          </>
+        )}
+      </Modal>
+    </div>
+  );
+}
+
 function NotifBlock() {
   const [perm, setPerm] = useState(typeof Notification !== "undefined" ? Notification.permission : "unsupported");
   const pedirPermiso = async () => {
@@ -2026,6 +2107,10 @@ function ConfigScreen({ cfg, save, reload }) {
         <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>Cargá las 7 obras Aruma/Platanitos y 24 personas del equipo (Brittnney, Alma, residentes RAD 415, arquitectos cliente, proveedores). <b>Solo agrega lo que falte</b> — no reemplaza tus datos.</div>
         <button onClick={cargarPlantilla} className="btn" style={{ background:"var(--ink2)", color:"var(--ink)", padding:11, width:"100%", marginBottom:6 }}><Upload size={14} style={{verticalAlign:-2}} /> Cargar plantilla del equipo (7 obras + 24 personas)</button>
         <button onClick={limpiarTodo} className="btn" style={{ background:"transparent", color:"var(--rojo)", padding:9, width:"100%", fontSize:12, border:"1px solid var(--rojo)" }}><Trash2 size={13} style={{verticalAlign:-2}} /> Borrar todos los datos (peligroso)</button>
+      </Section>
+      <Section title="🔍 Diagnóstico de datos en Supabase" icon={Search}>
+        <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>Si perdiste información (ej. Prescott), buscá la clave acá. Listá todo lo que hay en el servidor remoto, filtrá por nombre (ej. <span className="mono">prescott</span>, <span className="mono">crono</span>, <span className="mono">planos</span>, <span className="mono">entrega</span>), revisá el contenido y restaurá lo que necesités.</div>
+        <DiagnosticoSupabase reload={reload} />
       </Section>
       <Section title="🔔 Notificaciones del navegador" icon={Mail}>
         <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>Activar para recibir avisos automáticos: avances 10am/3pm, incidencias críticas, recordatorios. Funcionan estés o no en la pestaña, mientras el navegador esté abierto.</div>
@@ -2574,7 +2659,7 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
         <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:11, color:"#0a0d13", letterSpacing:"-.04em" }}>AS</div>
         <div style={{ flex:1 }}>
           <div className="disp" style={{ fontSize:14, lineHeight:1.1 }}>Arkym Sup</div>
-          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.4</div>
+          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.5</div>
         </div>
         <button onClick={onClose} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:7, padding:5, cursor:"pointer", color:"var(--ink2)", display:"flex", alignItems:"center" }} className="gld-sidebar-close" title="Cerrar menú"><X size={15} /></button>
       </div>

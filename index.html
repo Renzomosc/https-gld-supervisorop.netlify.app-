@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0a0d13" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>GLD Campo · v12</title>
-<meta name="version" content="v12-supabase" />
-<meta name="last-deploy" content="auto-deploy-2026-05-29" />
+<title>GLD Campo · v13.1</title>
+<meta name="version" content="v13.1-sidebar-zonas" />
+<meta name="last-deploy" content="auto-deploy-2026-05-30" />
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22GLD%20Campo%22%2C%22short_name%22%3A%22GLD%22%2C%22description%22%3A%22Supervisi%C3%B3n%20de%20producci%C3%B3n%20GLD%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230a0d13%22%2C%22theme_color%22%3A%22%230a0d13%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520192%2520192%2522%253E%253Crect%2520width%253D%2522192%2522%2520height%253D%2522192%2522%2520rx%253D%252236%2522%2520fill%253D%2522%2523ff6b35%2522%252F%253E%253Ctext%2520x%253D%252296%2522%2520y%253D%2522118%2522%2520text-anchor%253D%2522middle%2522%2520font-family%253D%2522system-ui%2522%2520font-weight%253D%2522bold%2522%2520font-size%253D%252264%2522%2520fill%253D%2522%25230a0d13%2522%253EGLD%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%23ff6b35'/%3E%3Ctext x='96' y='118' text-anchor='middle' font-family='system-ui' font-weight='bold' font-size='64' fill='%230a0d13'%3EGLD%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -100,6 +100,22 @@ input[type="time"]::-webkit-inner-spin-button, input[type="date"]::-webkit-inner
 }
 .boot{min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;color:var(--ink2);background:var(--bg)}
 .ico{display:inline-block;vertical-align:middle;width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* === Sidebar Notion-style (solo desktop) === */
+.gld-sidebar{display:none}
+.sb-item{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:8px;font-size:13.5px;color:var(--ink2);cursor:pointer;background:transparent;border:none;width:100%;text-align:left;font-family:'Space Grotesk',sans-serif;font-weight:500;letter-spacing:-.005em;position:relative;transition:background .12s ease, color .12s ease}
+.sb-item:hover{background:var(--surface2);color:var(--ink)}
+.sb-item.active{background:linear-gradient(90deg, rgba(255,107,53,.14), rgba(255,107,53,.04));color:var(--accent);font-weight:600}
+.sb-item.active::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;background:var(--accent);border-radius:0 3px 3px 0}
+.sb-section{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:14px 11px 6px}
+.sb-badge{margin-left:auto;background:var(--cyan);color:#0a0d13;font-size:10px;font-weight:700;border-radius:99px;padding:1px 7px;min-width:18px;text-align:center}
+@media (min-width:1100px){
+  .gld-sidebar{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:248px;background:linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);border-right:1px solid var(--border);z-index:8;padding:16px 10px 12px;overflow-y:auto}
+  .gld-bottom-nav{display:none !important}
+  .gld-fabs{display:none !important}
+  .gld-content{margin-left:248px !important;max-width:none !important}
+  .gld-content > main{max-width:780px;margin:0 auto}
+  .gld-content > header{max-width:780px;margin:0 auto}
+}
 </style>
 <script type="importmap">
 {
@@ -833,7 +849,8 @@ const ALERTA_NIVEL_COL = { "Crítico":"var(--rojo)", "Alto":"#fb7185", "Medio":"
 const ALERTA_NIVEL_BG = { "Crítico":"rgba(244,63,94,.14)", "Alto":"rgba(251,113,133,.12)", "Medio":"rgba(245,158,11,.12)", "Bajo":"rgba(34,211,238,.10)", "Normal":"rgba(16,185,129,.10)" };
 
 const ZONA_ESTADO_COL = { "Activa":"var(--cyan)", "En liberación":"var(--ambar)", "Liberada":"var(--verde)", "Pendiente":"var(--ink3)", "Bloqueada":"var(--rojo)" };
-const blankZona = (nombre = "") => ({ id: uid(), nombre, estado: "Activa", avance: 0, fechaInicio: hoy(), fechaLiberacion: "", observaciones: "", responsable: "" });
+const blankZona = (nombre = "") => ({ id: uid(), nombre, estado: "Activa", avance: 0, fechaInicio: hoy(), fechaLiberacion: "", observaciones: "", responsable: "", partidas: [] });
+const blankZonaPartida = () => ({ id: uid(), partida: "", inicio: hoy(), fin: hoy(), avance: 0, nota: "" });
 function reporteDiarioTexto(f, obra, zonasObra=[]) {
   const L = []; const obj = obra?.horaInicio || "08:00";
   L.push(`REPORTE DIARIO DE SUPERVISIÓN — GLD`);
@@ -2086,6 +2103,74 @@ function Inicio({ obras, visitas, notas, incidencias, decisiones, crono, cfg, pl
   );
 }
 
+/* ============================ SIDEBAR (desktop) ============================ */
+function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiertas=0 }) {
+  const SECCIONES = [
+    { titulo: null, items: [
+      { k:"inicio",  l:"Inicio",        Ico: Home },
+      { k:"visita",  l:"Nueva visita",  Ico: ClipboardCheck },
+      { k:"plan",    l:"Plan IA",       Ico: CalendarClock },
+      { k:"obra",    l:"Obra",          Ico: BarChart3 },
+      { k:"reportes",l:"Reportes",      Ico: FileText },
+    ]},
+    { titulo:"OPERACIÓN", items: [
+      { k:"cumplimiento", l:"Cumplimiento del día", Ico: CheckCircle2 },
+      { k:"jornada",      l:"Jornada WhatsApp",     Ico: MessageCircle },
+      { k:"agenda",       l:"Mi semana",            Ico: CalendarRange },
+      { k:"obras",        l:"Tiendas",              Ico: Building2 },
+      { k:"incidencias",  l:"Incidencias",          Ico: AlertTriangle, badge: incidenciasAbiertas },
+      { k:"personas",     l:"Directorio",           Ico: Users },
+      { k:"decisiones",   l:"Decisión de obra",     Ico: Mail },
+    ]},
+    { titulo:"IA / CONOCIMIENTO", items: [
+      { k:"ia",      l:"Copiloto Claude", Ico: Sparkles },
+      { k:"cerebro", l:"🧠 Cerebro",      Ico: Layers },
+      { k:"notas",   l:"Notas",           Ico: MessageSquare, badge: notasPendientes },
+    ]},
+    { titulo:"SISTEMA", items: [
+      { k:"config", l:"Ajustes", Ico: Settings },
+    ]},
+  ];
+  return (
+    <aside className="gld-sidebar">
+      <div style={{ display:"flex", alignItems:"center", gap:10, padding:"6px 11px 16px", borderBottom:"1px solid var(--border-soft)", marginBottom:8 }}>
+        <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:12, color:"#0a0d13", letterSpacing:"-.04em" }}>GLD</div>
+        <div>
+          <div className="disp" style={{ fontSize:14, lineHeight:1.1 }}>GLD Campo</div>
+          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.1</div>
+        </div>
+      </div>
+      {SECCIONES.map((sec, si) => (
+        <div key={si} style={{ marginBottom: si === SECCIONES.length - 1 ? 0 : 4 }}>
+          {sec.titulo && <div className="sb-section">{sec.titulo}</div>}
+          {sec.items.map(it => {
+            const active = tab === it.k;
+            const Ico = it.Ico;
+            return (
+              <button key={it.k} className={"sb-item" + (active ? " active" : "")} onClick={() => setTab(it.k)}>
+                <Ico size={15} strokeWidth={active ? 2.4 : 1.9} />
+                <span style={{ flex:1, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{it.l}</span>
+                {it.badge > 0 && <span className="sb-badge">{it.badge}</span>}
+              </button>
+            );
+          })}
+        </div>
+      ))}
+      {syncStatus?.configured && (() => {
+        const c = syncStatus.status === "online" ? "var(--verde)" : syncStatus.status === "syncing" ? "var(--cyan)" : syncStatus.status === "error" ? "var(--rojo)" : "var(--ink3)";
+        const txt = syncStatus.status === "online" ? "Sync OK" : syncStatus.status === "syncing" ? "Sincronizando…" : syncStatus.status === "error" ? "Sync error" : "Local";
+        return (
+          <div style={{ marginTop:"auto", padding:"10px 11px 0", borderTop:"1px solid var(--border-soft)", display:"flex", alignItems:"center", gap:7, fontSize:11, color:c }}>
+            <span style={{ width:7, height:7, borderRadius:99, background:c, boxShadow: syncStatus.status === "syncing" ? `0 0 8px ${c}` : "none" }} />
+            <span className="mono" style={{ fontWeight:600 }}>{txt}</span>
+            {syncStatus.lastSync ? <span style={{ marginLeft:"auto", color:"var(--ink3)", fontSize:10 }}>{new Date(syncStatus.lastSync).toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})}</span> : null}
+          </div>
+        );
+      })()}
+    </aside>
+  );
+}
+
 /* ============================ APP ROOT ============================ */
 function App() {
   const [loading, setLoading] = useState(true);
@@ -2284,8 +2369,12 @@ function App() {
   else if (tab === "agenda") body = <AgendaScreen obras={obras} agenda={agenda} save={saveAgenda} />;
   else if (tab === "personas") body = <PersonasScreen personas={personas} save={savePersonas} />;
 
+  const notasPendCount = (notas||[]).filter(n=>n.estado==="Pendiente").length;
+  const incidAbiertasCount = (incidencias||[]).filter(x=>x.estado==="Abierta").length;
   return (
-    <div className="gld" style={{ minHeight:"100vh", maxWidth:520, margin:"0 auto" }}>
+    <>
+    <Sidebar tab={tab} setTab={(k)=>{ if(k==="visita") setEditVisita(null); setTab(k); }} syncStatus={syncStatus} notasPendientes={notasPendCount} incidenciasAbiertas={incidAbiertasCount} />
+    <div className="gld gld-content" style={{ minHeight:"100vh", maxWidth:520, margin:"0 auto" }}>
       <header className="hide-print" style={{ position:"sticky", top:0, zIndex:10, background:"rgba(10,13,19,.85)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", borderBottom:"1px solid var(--border)", padding:"14px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           {backTabs.includes(tab) && <button onClick={()=>setTab("mas")} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:8, cursor:"pointer", padding:5, display:"flex", alignItems:"center", justifyContent:"center" }}><ChevronLeft color="var(--ink)" size={18} /></button>}
@@ -2306,7 +2395,7 @@ function App() {
       <AyudaIAModal open={ayudaIA} onClose={()=>setAyudaIA(false)} goCfg={()=>{ setAyudaIA(false); setTab("config"); }} />
       <AprenderCerebroModal open={aprender.open} visita={aprender.visita} obras={obras} cerebro={cerebro} apiKey={cfg.anthKey} onClose={()=>{ setAprender({ open:false, visita:null }); setTab("inicio"); }} onGuardar={async(entradas) => { const nuevos = entradas.map(e => ({ ...e, id: uid(), fecha: hoy() })); const all = [...cerebro, ...nuevos]; setCerebro(all); await store.set("cerebro", all); setAprender({ open:false, visita:null }); setTab("inicio"); alert(`Se agregaron ${nuevos.length} entrada(s) al cerebro.`); }} />
       {/* FABs flotantes — Copiloto IA + Cerebro + Notas */}
-      <div className="hide-print" style={{ position:"fixed", bottom:84, right:14, display:"flex", flexDirection:"column", gap:10, zIndex:9 }}>
+      <div className="hide-print gld-fabs" style={{ position:"fixed", bottom:84, right:14, display:"flex", flexDirection:"column", gap:10, zIndex:9 }}>
         {tab !== "cerebro" && (
           <button onClick={() => setTab("cerebro")} title="Cerebro" style={{ width:48, height:48, borderRadius:99, background:"var(--surface2)", border:"1.5px solid var(--ia)", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 4px 16px -4px var(--ia-glow)" }}>
             <span style={{ fontSize:22 }}>🧠</span>
@@ -2325,7 +2414,7 @@ function App() {
           </button>
         )}
       </div>
-      <nav className="hide-print" style={{ position:"fixed", bottom:0, left:0, right:0, maxWidth:520, margin:"0 auto", background:"rgba(10,13,19,.85)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", display:"flex", padding:"8px 0 10px", borderTop:"1px solid var(--border)" }}>
+      <nav className="hide-print gld-bottom-nav" style={{ position:"fixed", bottom:0, left:0, right:0, maxWidth:520, margin:"0 auto", background:"rgba(10,13,19,.85)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", display:"flex", padding:"8px 0 10px", borderTop:"1px solid var(--border)" }}>
         {NAV.map(([k,l,Ico]) => {
           const active = tab === k;
           return (
@@ -2338,6 +2427,7 @@ function App() {
         })}
       </nav>
     </div>
+    </>
   );
 }
 
@@ -2758,6 +2848,24 @@ function ZonasManager({ obra, obraId, zonas=[], save, visitas=[] }) {
         <Field label="Responsable / cuadrilla"><TInput value={ed.responsable} onChange={e => setEd({ ...ed, responsable: e.target.value })} /></Field>
         <Field label="Observaciones actuales"><TArea value={ed.observaciones} onChange={e => setEd({ ...ed, observaciones: e.target.value })} rows={3} placeholder="Observaciones técnicas, decisiones, pendientes de esta zona" /></Field>
       </Section>
+      <Section title="Cronograma de la zona" icon={CalendarRange}>
+        <div style={{ fontSize:12, color:"var(--ink2)", marginBottom:10, lineHeight:1.45 }}>Partidas específicas de esta zona con fechas y % de avance. Cada zona puede tener su propio cronograma — independiente del cronograma general de la obra.</div>
+        {(ed.partidas || []).map((p, i) => (
+          <div key={p.id} className="card" style={{ padding:11, marginBottom:8, background:"var(--surface)" }}>
+            <div style={{ display:"flex", gap:6, marginBottom:7 }}>
+              <Sel value={p.partida} onChange={e => { const next = [...ed.partidas]; next[i] = { ...p, partida: e.target.value }; setEd({ ...ed, partidas: next }); }} options={[{ value:"", label:"— Elegí partida —" }, ...PARTIDAS]} />
+              <button className="btn" onClick={() => setEd({ ...ed, partidas: ed.partidas.filter(x => x.id !== p.id) })} style={{ background:"transparent", padding:6 }}><Trash2 size={15} color="var(--rojo)" /></button>
+            </div>
+            <div style={{ display:"flex", gap:6, marginBottom:6 }}>
+              <div style={{ flex:1 }}><label className="lbl">Inicio</label><TInput type="date" value={p.inicio} onChange={e => { const next = [...ed.partidas]; next[i] = { ...p, inicio: e.target.value }; setEd({ ...ed, partidas: next }); }} /></div>
+              <div style={{ flex:1 }}><label className="lbl">Fin</label><TInput type="date" value={p.fin} onChange={e => { const next = [...ed.partidas]; next[i] = { ...p, fin: e.target.value }; setEd({ ...ed, partidas: next }); }} /></div>
+              <div style={{ width:78 }}><label className="lbl">% Av</label><TInput type="number" min="0" max="100" value={p.avance} onChange={e => { const next = [...ed.partidas]; next[i] = { ...p, avance: +e.target.value || 0 }; setEd({ ...ed, partidas: next }); }} /></div>
+            </div>
+            <TInput value={p.nota} onChange={e => { const next = [...ed.partidas]; next[i] = { ...p, nota: e.target.value }; setEd({ ...ed, partidas: next }); }} placeholder="Nota / responsable (opcional)" />
+          </div>
+        ))}
+        <button className="btn" onClick={() => setEd({ ...ed, partidas: [ ...(ed.partidas||[]), blankZonaPartida() ] })} style={{ background:"var(--surface3)", color:"var(--ink)", padding:10, width:"100%" }}><Plus size={15} style={{verticalAlign:-2}} /> Agregar partida</button>
+      </Section>
       <div style={{ display:"flex", gap:10 }}>
         <button className="btn" onClick={() => setEd(null)} style={{ flex:1, background:"var(--surface2)", color:"var(--ink)", padding:14 }}>Cancelar</button>
         <button className="btn" onClick={commit} style={{ flex:2, background:"linear-gradient(135deg, var(--accent), #ff8855)", color:"#fff", padding:14 }}><Save size={16} style={{verticalAlign:-3}} /> Guardar zona</button>
@@ -2797,6 +2905,27 @@ function ZonasManager({ obra, obraId, zonas=[], save, visitas=[] }) {
               </div>
             </div>
             {z.observaciones && <div style={{ marginTop:10, padding:9, background:"var(--surface)", border:"1px solid var(--border-soft)", borderRadius:8, fontSize:12.5, lineHeight:1.5, color:"var(--ink2)" }}>{z.observaciones}</div>}
+            {(z.partidas || []).length > 0 && (
+              <div style={{ marginTop:10, padding:10, background:"var(--surface)", border:"1px solid var(--border-soft)", borderRadius:8 }}>
+                <div className="lbl" style={{ marginBottom:7, color:"var(--accent)" }}>📅 Cronograma de la zona ({z.partidas.length})</div>
+                {z.partidas.map((p, i) => {
+                  const today = hoy();
+                  const atrasada = p.fin && p.fin < today && (p.avance || 0) < 100;
+                  const activa = p.inicio && p.fin && p.inicio <= today && p.fin >= today;
+                  const colP = atrasada ? "var(--rojo)" : activa ? "var(--cyan)" : (p.avance >= 100 ? "var(--verde)" : "var(--ink3)");
+                  return (
+                    <div key={p.id} style={{ padding:"6px 0", borderBottom: i < z.partidas.length - 1 ? "1px solid var(--border-soft)" : "none" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8 }}>
+                        <div style={{ fontSize:12.5, color:"var(--ink)", flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.partida || "(sin partida)"}</div>
+                        <span className="mono" style={{ fontSize:11, color: colP, fontWeight:700 }}>{p.avance || 0}%</span>
+                      </div>
+                      <div className="mono" style={{ fontSize:10.5, color: colP }}>{p.inicio} → {p.fin}{atrasada ? " · ATRASADA" : activa ? " · ACTIVA" : ""}</div>
+                      {p.nota && <div style={{ fontSize:11.5, color:"var(--ink3)", marginTop:2 }}>{p.nota}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             {historial.length > 0 && (
               <div style={{ marginTop:10, padding:10, background:"var(--surface)", border:"1px solid var(--border-soft)", borderRadius:8 }}>
                 <div className="lbl" style={{ marginBottom:6, color:"var(--cyan)" }}>📅 Historial de observaciones ({historial.length})</div>

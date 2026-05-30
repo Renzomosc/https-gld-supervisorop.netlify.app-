@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0a0d13" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>Arkym Sup · v13.2</title>
-<meta name="version" content="v13.2-arkym" />
-<meta name="last-deploy" content="auto-deploy-2026-05-30b" />
+<title>Arkym Sup · v13.3</title>
+<meta name="version" content="v13.3-notif-avances" />
+<meta name="last-deploy" content="auto-deploy-2026-05-30d" />
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Arkym%20Sup%22%2C%22short_name%22%3A%22Arkym%22%2C%22description%22%3A%22Supervisi%C3%B3n%20de%20producci%C3%B3n%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230a0d13%22%2C%22theme_color%22%3A%22%230a0d13%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520192%2520192%2522%253E%253Crect%2520width%253D%2522192%2522%2520height%253D%2522192%2522%2520rx%253D%252236%2522%2520fill%253D%2522%2523ff6b35%2522%252F%253E%253Ctext%2520x%253D%252296%2522%2520y%253D%2522118%2522%2520text-anchor%253D%2522middle%2522%2520font-family%253D%2522system-ui%2522%2520font-weight%253D%2522bold%2522%2520font-size%253D%252264%2522%2520fill%253D%2522%25230a0d13%2522%253EAS%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%23ff6b35'/%3E%3Ctext x='96' y='118' text-anchor='middle' font-family='system-ui' font-weight='bold' font-size='64' fill='%230a0d13'%3EAS%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1780,6 +1780,37 @@ function ObrasScreen({ obras, save, onAbrirNota }) {
 
 /* ============================ CONFIG ============================ */
 // === Notificaciones del navegador (local Notification API) ===
+// === Mensaje de avance 10am/3pm (formato fijo solicitado por el supervisor) ===
+const mensajeAvanceFormat = (hora) => {
+  const labelHora = hora === "10:00" ? "MAÑANA — 10:00 AM" : "TARDE — 3:00 PM";
+  return "📊 REPORTE DE AVANCE " + labelHora + "\n\nEstimado equipo, por favor envíen el reporte de avance con lo siguiente:\n\n📸 ADJUNTAR:\n• 3 fotos PANORÁMICAS de avance (área limpia)\n• 1 foto EXTERIOR del perímetro (limpio)\n• Foto de circulación para personal de tienda (aplica si su circulación está dentro del área a intervenir)\n\nGracias.";
+};
+// Scheduler: chequea cada cierto rato si toca disparar la notificación de las 10:00 o 15:00. Usa localStorage para no repetir el mismo día.
+const NOTIF_SCHED_KEY_AVANCE = "arkym:notif:lastfire:avances";
+function arkymCheckScheduledAvances(cfg) {
+  try {
+    cfg = cfg || {};
+    if (cfg.notifAvances === false) return;
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    var now = new Date();
+    var hhmm = String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
+    var today = now.toISOString().slice(0,10);
+    var last = {};
+    try { last = JSON.parse(localStorage.getItem(NOTIF_SCHED_KEY_AVANCE) || "{}"); } catch (e) {}
+    var horaAM = cfg.horaAvanceMorning || "10:00";
+    var horaPM = cfg.horaAvanceAfternoon || "15:00";
+    if (hhmm === horaAM && last["am"] !== today) {
+      arkymNotify("📊 Avance mañana (" + horaAM + ")", { body: "Es hora del reporte de avance. Tocá Arkym Sup para ver el mensaje.", tag: "avance-am" });
+      last["am"] = today;
+      try { localStorage.setItem(NOTIF_SCHED_KEY_AVANCE, JSON.stringify(last)); } catch (e) {}
+    }
+    if (hhmm === horaPM && last["pm"] !== today) {
+      arkymNotify("📊 Avance tarde (" + horaPM + ")", { body: "Es hora del reporte de avance. Tocá Arkym Sup para ver el mensaje.", tag: "avance-pm" });
+      last["pm"] = today;
+      try { localStorage.setItem(NOTIF_SCHED_KEY_AVANCE, JSON.stringify(last)); } catch (e) {}
+    }
+  } catch (e) { console.warn("scheduler avance:", e); }
+}
 const arkymNotify = (titulo, opts={}) => {
   try {
     if (!("Notification" in window)) return false;
@@ -1987,8 +2018,16 @@ function ConfigScreen({ cfg, save, reload }) {
         <button onClick={limpiarTodo} className="btn" style={{ background:"transparent", color:"var(--rojo)", padding:9, width:"100%", fontSize:12, border:"1px solid var(--rojo)" }}><Trash2 size={13} style={{verticalAlign:-2}} /> Borrar todos los datos (peligroso)</button>
       </Section>
       <Section title="🔔 Notificaciones del navegador" icon={Mail}>
-        <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>Activar para recibir avisos del navegador (incidencias críticas, recordatorios de jornada, plan IA listo). Funcionan estés o no en la pestaña, mientras el navegador esté abierto.</div>
+        <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>Activar para recibir avisos automáticos: avances 10am/3pm, incidencias críticas, recordatorios. Funcionan estés o no en la pestaña, mientras el navegador esté abierto.</div>
         <NotifBlock />
+        <div style={{ marginTop:14, padding:11, background:"var(--surface)", borderRadius:8, border:"1px solid var(--border-soft)" }}>
+          <Toggle label="📊 Aviso de avance a las 10 AM y 3 PM" value={c.notifAvances !== false} onChange={v => setC({ ...c, notifAvances: v })} />
+          <div style={{ display:"flex", gap:8, marginTop:9 }}>
+            <div style={{ flex:1 }}><Field label="Hora mañana"><TimeInput value={c.horaAvanceMorning || "10:00"} onChange={e => setC({ ...c, horaAvanceMorning: e.target.value })} /></Field></div>
+            <div style={{ flex:1 }}><Field label="Hora tarde"><TimeInput value={c.horaAvanceAfternoon || "15:00"} onChange={e => setC({ ...c, horaAvanceAfternoon: e.target.value })} /></Field></div>
+          </div>
+          <div style={{ fontSize:11, color:"var(--ink3)", marginTop:4, lineHeight:1.5 }}>💡 La notificación trae el mensaje listo: 3 fotos panorámicas + 1 exterior + circulación tienda. Guardá ajustes para que aplique.</div>
+        </div>
       </Section>
       <Section title="🛟 Respaldos automáticos (snapshots)" icon={Save}>
         <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:10, lineHeight:1.5 }}>La app guarda automáticamente un respaldo local antes de cada sincronización y cada 10 cambios. Si perdés data, restaurá desde acá.</div>
@@ -2039,9 +2078,34 @@ function Inicio({ obras, visitas, notas, incidencias, decisiones, crono, cfg, pl
       <span style={{ fontSize:11.5, fontWeight:600, letterSpacing:"-.01em", textAlign:"center", lineHeight:1.2 }}>{label}</span>
     </button>
   );
+  // Banner avance 10am/3pm (visible cerca de la hora). Defensivo: si algo falla, no rompe el render.
+  let avanceAvisos = [];
+  try {
+    const d = new Date();
+    const horaActual = d.getHours() * 60 + d.getMinutes();
+    avanceAvisos = [
+      { label: "10:00 AM", hora: 10*60, fmt: mensajeAvanceFormat("10:00") },
+      { label: "3:00 PM",  hora: 15*60, fmt: mensajeAvanceFormat("15:00") },
+    ].filter(a => Math.abs(horaActual - a.hora) <= 120);
+  } catch (e) { avanceAvisos = []; }
   return (
     <div style={{ padding:16, paddingBottom:110 }}>
-      <RecordatorioJornada obras={obras} log={jornadaLog} goJornada={goJornada} />
+      {avanceAvisos.map(a => (
+        <div key={a.label} className="card" style={{ padding:13, marginBottom:10, borderLeft:"4px solid var(--accent)", background:"linear-gradient(135deg, rgba(255,107,53,.06), rgba(255,107,53,.02))" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:7 }}>
+            <span style={{ fontSize:18 }}>📊</span>
+            <div style={{ flex:1 }}>
+              <div className="disp" style={{ fontSize:13.5 }}>Avance {a.label}</div>
+              <div style={{ fontSize:11.5, color:"var(--ink3)" }}>Hora de pedir el reporte al equipo</div>
+            </div>
+          </div>
+          <pre className="mono" style={{ whiteSpace:"pre-wrap", fontSize:11.5, margin:0, padding:9, background:"var(--surface)", borderRadius:7, color:"var(--ink2)", lineHeight:1.5, maxHeight:140, overflow:"auto" }}>{a.fmt}</pre>
+          <div style={{ display:"flex", gap:6, marginTop:8 }}>
+            <a href={"https://wa.me/?text=" + encodeURIComponent(a.fmt)} target="_blank" rel="noreferrer" className="btn" style={{ flex:1, background:"#25D366", color:"#fff", padding:9, textAlign:"center", textDecoration:"none", fontSize:12.5 }}>📱 WhatsApp</a>
+            <button onClick={() => { try { navigator.clipboard.writeText(a.fmt); alert("Mensaje copiado."); } catch (e) { alert(a.fmt); } }} className="btn" style={{ flex:1, background:"var(--surface3)", color:"var(--ink)", padding:9, fontSize:12.5 }}>📋 Copiar</button>
+          </div>
+        </div>
+      ))}
       {sinIA && (
         <div onClick={onAyudaIA} className="card glow-ia" style={{ padding:13, marginBottom:14, cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center", gap:10 }}>
           <div style={{ display:"flex", alignItems:"center", gap:11 }}>
@@ -2151,9 +2215,8 @@ function Inicio({ obras, visitas, notas, incidencias, decisiones, crono, cfg, pl
       </div>
 
       {/* Quick actions grid */}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:8, marginBottom:14 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:8, marginBottom:14 }}>
         <QA icon={MessageSquare} label="Nota" onClick={onQuickNota} color="var(--ia)" badge={notasPend.length} />
-        <QA icon={MessageCircle} label="Jornada" onClick={goJornada} color="var(--verde)" />
         <QA icon={AlertTriangle} label="Incid." onClick={goIncidencias} color="var(--ambar)" badge={incAbiertas} />
         <QA icon={CalendarClock} label="Mi semana" onClick={goAgenda} color="var(--cyan)" />
       </div>
@@ -2268,12 +2331,10 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
     ]},
     { titulo:"OPERACIÓN", items: [
       { k:"cumplimiento", l:"Cumplimiento del día", Ico: CheckCircle2 },
-      { k:"jornada",      l:"Jornada WhatsApp",     Ico: MessageCircle },
       { k:"agenda",       l:"Mi semana",            Ico: CalendarRange },
       { k:"obras",        l:"Tiendas",              Ico: Building2 },
       { k:"incidencias",  l:"Incidencias",          Ico: AlertTriangle, badge: incidenciasAbiertas },
       { k:"personas",     l:"Directorio",           Ico: Users },
-      { k:"decisiones",   l:"Decisión de obra",     Ico: Mail },
     ]},
     { titulo:"IA / CONOCIMIENTO", items: [
       { k:"ia",      l:"Copiloto Claude", Ico: Sparkles },
@@ -2292,7 +2353,7 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
         <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:11, color:"#0a0d13", letterSpacing:"-.04em" }}>AS</div>
         <div style={{ flex:1 }}>
           <div className="disp" style={{ fontSize:14, lineHeight:1.1 }}>Arkym Sup</div>
-          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.2</div>
+          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.3</div>
         </div>
         <button onClick={onClose} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:7, padding:5, cursor:"pointer", color:"var(--ink2)", display:"flex", alignItems:"center" }} className="gld-sidebar-close" title="Cerrar menú"><X size={15} /></button>
       </div>
@@ -2484,6 +2545,13 @@ function App() {
     const t = setInterval(() => { store.pullAll().catch(()=>{}); }, 30000);
     return () => clearInterval(t);
   }, [syncStatus.configured]);
+  // Scheduler de notificaciones programadas (10am, 3pm avances) — chequeo cada 30s
+  useEffect(() => {
+    const tick = () => arkymCheckScheduledAvances(cfg);
+    tick();
+    const t = setInterval(tick, 30000);
+    return () => clearInterval(t);
+  }, [cfg]);
 
   const saveObras = async (n) => { setObras(n); await store.set("obras", n); if (!n.find(o=>o.id===selObra)) setSelObra(n[0]?.id || ""); };
   const saveNotas = async (n) => { setNotas(n); await store.set("notas", n); };
@@ -2661,7 +2729,6 @@ function MasMenu({ setTab }) {
       { k:"cumplimiento", l:"Cumplimiento del día", sub:"Plan vigente + tracking", Ico:CheckCircle2, color:"var(--verde)" },
     ]},
     { titulo:"COMUNICACIÓN", items:[
-      { k:"jornada", l:"Jornada WhatsApp", sub:"Inicio / Medio / Fin", Ico:MessageCircle, color:"#25D366" },
       { k:"agenda", l:"Mi semana", sub:"Agenda de visitas + .ics", Ico:CalendarClock, color:"var(--cyan)" },
     ]},
     { titulo:"DATOS / SEGUIMIENTO", items:[

@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#0a0d13" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<title>Arkym Sup · v13.9</title>
-<meta name="version" content="v13.9-copiloto-files" />
-<meta name="last-deploy" content="auto-deploy-2026-05-30j" />
+<title>Arkym Sup · v13.10</title>
+<meta name="version" content="v13.10-fix-crono-theme-planos" />
+<meta name="last-deploy" content="auto-deploy-2026-05-31a" />
 <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Arkym%20Sup%22%2C%22short_name%22%3A%22Arkym%22%2C%22description%22%3A%22Supervisi%C3%B3n%20de%20producci%C3%B3n%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22orientation%22%3A%22portrait%22%2C%22background_color%22%3A%22%230a0d13%22%2C%22theme_color%22%3A%22%230a0d13%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520192%2520192%2522%253E%253Crect%2520width%253D%2522192%2522%2520height%253D%2522192%2522%2520rx%253D%252236%2522%2520fill%253D%2522%2523ff6b35%2522%252F%253E%253Ctext%2520x%253D%252296%2522%2520y%253D%2522118%2522%2520text-anchor%253D%2522middle%2522%2520font-family%253D%2522system-ui%2522%2520font-weight%253D%2522bold%2522%2520font-size%253D%252264%2522%2520fill%253D%2522%25230a0d13%2522%253EAS%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%23ff6b35'/%3E%3Ctext x='96' y='118' text-anchor='middle' font-family='system-ui' font-weight='bold' font-size='64' fill='%230a0d13'%3EAS%3C/text%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -37,10 +37,37 @@
   --paper:var(--surface);
   --concrete:var(--bg);
   --line:var(--border);
+  --gradient-top:#161f2d;
 }
+/* === Modo día (claro) === */
+body.theme-light{
+  --bg:#f7f8fa;
+  --surface:#ffffff;
+  --surface2:#f1f3f7;
+  --surface3:#e3e7ee;
+  --border:#d4dae3;
+  --border-soft:#e6ebf1;
+  --ink:#1a1f29;
+  --ink2:#5a6478;
+  --ink3:#8a95a8;
+  --accent:#ea580c;
+  --accent-glow:rgba(234,88,12,.18);
+  --cyan:#0891b2;
+  --cyan-glow:rgba(8,145,178,.16);
+  --verde:#059669;
+  --ambar:#d97706;
+  --rojo:#dc2626;
+  --ia:#7c3aed;
+  --ia-glow:rgba(124,58,237,.14);
+  --gradient-top:#eaecf2;
+}
+body.theme-light .card{background:linear-gradient(180deg, #ffffff 0%, #fafbfd 100%) !important}
+body.theme-light .gld{background:radial-gradient(ellipse 80% 50% at top, #eaecf2 0%, #f7f8fa 50%) !important}
+body.theme-light input[type="date"], body.theme-light input[type="time"]{color-scheme:light !important}
+body.theme-light input[type="time"]::-webkit-calendar-picker-indicator, body.theme-light input[type="date"]::-webkit-calendar-picker-indicator{filter:none !important}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0;background:var(--bg);overscroll-behavior-y:contain}
-.gld{font-family:'Space Grotesk','Inter',system-ui,sans-serif;color:var(--ink);background:radial-gradient(ellipse 80% 50% at top, #161f2d 0%, var(--bg) 50%);min-height:100vh;background-attachment:fixed}
+html,body{margin:0;padding:0;background:var(--bg);overscroll-behavior-y:contain;transition:background .25s ease}
+.gld{font-family:'Space Grotesk','Inter',system-ui,sans-serif;color:var(--ink);background:radial-gradient(ellipse 80% 50% at top, var(--gradient-top) 0%, var(--bg) 50%);min-height:100vh;background-attachment:fixed;transition:color .25s ease, background .25s ease}
 .mono{font-family:'JetBrains Mono',monospace;letter-spacing:-.02em}
 .disp{font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:-.025em}
 .card{background:linear-gradient(180deg, rgba(26,33,44,.85) 0%, rgba(18,24,33,.92) 100%);border:1px solid var(--border);border-radius:14px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--ink)}
@@ -2864,7 +2891,7 @@ function DashboardScreen({ obras, visitas, incidencias, crono, zonas }) {
 }
 
 /* ============================ SIDEBAR (drawer mobile + fijo desktop) ============================ */
-function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiertas=0, open=false, onClose=()=>{} }) {
+function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiertas=0, open=false, onClose=()=>{}, theme="dark", setTheme=()=>{} }) {
   const SECCIONES = [
     { titulo: null, items: [
       { k:"inicio",  l:"Inicio",        Ico: Home },
@@ -2898,8 +2925,9 @@ function Sidebar({ tab, setTab, syncStatus, notasPendientes=0, incidenciasAbiert
         <div style={{ width:30, height:30, borderRadius:8, background:"linear-gradient(135deg, var(--accent), #ff9a5b)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:800, fontSize:11, color:"#0a0d13", letterSpacing:"-.04em" }}>AS</div>
         <div style={{ flex:1 }}>
           <div className="disp" style={{ fontSize:14, lineHeight:1.1 }}>Arkym Sup</div>
-          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.9</div>
+          <div className="mono" style={{ fontSize:10, color:"var(--ink3)" }}>Supervisión · v13.10</div>
         </div>
+        <button onClick={() => setTheme(theme === "light" ? "dark" : "light")} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:7, padding:6, cursor:"pointer", color: theme === "light" ? "var(--ambar)" : "var(--cyan)", display:"flex", alignItems:"center", fontSize:14 }} title={theme === "light" ? "Cambiar a modo noche" : "Cambiar a modo día"}>{theme === "light" ? "☀️" : "🌙"}</button>
         <button onClick={onClose} style={{ background:"var(--surface2)", border:"1px solid var(--border)", borderRadius:7, padding:5, cursor:"pointer", color:"var(--ink2)", display:"flex", alignItems:"center" }} className="gld-sidebar-close" title="Cerrar menú"><X size={15} /></button>
       </div>
       {SECCIONES.map((sec, si) => (
@@ -2941,6 +2969,14 @@ function App() {
   const [lastTab, setLastTab] = useState("inicio");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [updateAvail, setUpdateAvail] = useState(false);
+  const [theme, setTheme] = useState(() => { try { return localStorage.getItem("arkym:theme") || "dark"; } catch (e) { return "dark"; } });
+  useEffect(() => {
+    if (theme === "light") document.body.classList.add("theme-light"); else document.body.classList.remove("theme-light");
+    try { localStorage.setItem("arkym:theme", theme); } catch (e) {}
+    // Actualizar el theme-color del navegador (status bar mobile)
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", theme === "light" ? "#f7f8fa" : "#0a0d13");
+  }, [theme]);
   const backExitRef = useRef(0);
   const setTab = (newTab) => {
     setLastTab(prev => tab === "ia" ? prev : tab);
@@ -3183,7 +3219,7 @@ function App() {
     // Contexto contextual: detectar de qué pantalla venía el usuario
     const ctxKey = lastTab === "visita" ? "visita" : lastTab === "obra" ? "obra" : lastTab === "reportes" ? "reportes" : lastTab === "incidencias" ? "incidencias" : lastTab === "cerebro" ? "cerebro" : lastTab === "plan" ? "crono" : "inicio";
     const ctxData = ctxKey === "visita" ? editVisita : ctxKey === "obra" ? { obraId: selObra, obra: obras.find(o => o.id === selObra) } : null;
-    body = <IAChat obras={obras} visitas={visitas} notas={notas} incidencias={incidencias} decisiones={decisiones} crono={crono} cerebro={cerebro} apiKey={cfg.anthKey} contextKey={ctxKey} contextData={ctxData} zonas={zonas} saveCronoDoc={saveCronoDoc} savePlano={savePlano} />;
+    body = <IAChat obras={obras} visitas={visitas} notas={notas} incidencias={incidencias} decisiones={decisiones} crono={crono} cerebro={cerebro} apiKey={cfg.anthKey} contextKey={ctxKey} contextData={ctxData} zonas={zonas} saveCronoDoc={saveCronoDoc} savePlano={savePlano} setTabAndObra={(t,oid)=>{ setSelObra(oid); setTab(t); }} />;
   }
   else if (tab === "plan") body = <PlanesIAScreen obras={obras} cronoDocs={cronoDocs} crono={crono} visitas={visitas} notas={notas} incidencias={incidencias} cerebro={cerebro} apiKey={cfg.anthKey} savePlanDiario={savePlanDiario} />;
   else if (tab === "cerebro") body = <CerebroScreen cerebro={cerebro} save={saveCerebro} apiKey={cfg.anthKey} />;
@@ -3210,7 +3246,7 @@ function App() {
         <button onClick={() => { setUpdateAvail(false); location.reload(); }}>Actualizar</button>
       </div>
     )}
-    <Sidebar tab={tab} setTab={(k)=>{ if(k==="visita") setEditVisita(null); setTab(k); }} syncStatus={syncStatus} notasPendientes={notasPendCount} incidenciasAbiertas={incidAbiertasCount} open={sidebarOpen} onClose={()=>setSidebarOpen(false)} />
+    <Sidebar tab={tab} setTab={(k)=>{ if(k==="visita") setEditVisita(null); setTab(k); }} syncStatus={syncStatus} notasPendientes={notasPendCount} incidenciasAbiertas={incidAbiertasCount} open={sidebarOpen} onClose={()=>setSidebarOpen(false)} theme={theme} setTheme={setTheme} />
     <div className="gld gld-content" style={{ minHeight:"100vh", maxWidth:520, margin:"0 auto", paddingTop: updateAvail ? 56 : 0 }}>
       <header className="hide-print" style={{ position:"sticky", top: updateAvail ? 56 : 0, zIndex:10, background:"rgba(10,13,19,.85)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", borderBottom:"1px solid var(--border)", padding:"14px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -3783,23 +3819,43 @@ function ZonasManager({ obra, obraId, zonas=[], save, visitas=[] }) {
 }
 
 /* ============================ VISOR INLINE (PDF/imagen fullscreen) ============================ */
-function DocViewer({ open, onClose, data, tipo, nombre }) {
+function DocViewer({ open, onClose, data, tipo, nombre, meta }) {
+  const [zoom, setZoom] = useState(1);
+  const [rot, setRot] = useState(0);
+  useEffect(() => { if (open) { setZoom(1); setRot(0); } }, [open, data]);
   if (!open || !data) return null;
   const esImg = tipo === "img" || (data.startsWith("data:image"));
+  const abrirNueva = () => { try { const w = window.open(); if (w) { w.document.write('<iframe src="' + data + '" style="border:0;width:100vw;height:100vh"></iframe>'); } } catch (e) {} };
   return (
     <div style={{ position:"fixed", inset:0, background:"#000", zIndex:200, display:"flex", flexDirection:"column" }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 14px", background:"rgba(10,13,19,.95)", borderBottom:"1px solid var(--border)" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:8, color:"var(--ink)", minWidth:0 }}>
-          {esImg ? "🖼" : "📄"} <span style={{ fontSize:13, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{nombre || "Documento"}</span>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 14px", background:"rgba(10,13,19,.95)", borderBottom:"1px solid #232b38", flexWrap:"wrap", gap:8 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8, color:"#e8ecf2", minWidth:0, flex:"1 1 auto" }}>
+          <span style={{ fontSize:18 }}>{esImg ? "🖼" : "📄"}</span>
+          <div style={{ minWidth:0, flex:1 }}>
+            <div style={{ fontSize:13, fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{nombre || "Documento"}</div>
+            {meta && <div style={{ fontSize:10.5, color:"#8a95a8" }}>{meta}</div>}
+          </div>
         </div>
-        <div style={{ display:"flex", gap:6 }}>
-          <a href={data} download={nombre || "documento"} className="btn" style={{ background:"var(--surface3)", color:"var(--ink)", padding:8, textDecoration:"none" }}><Upload size={15} style={{ transform:"rotate(180deg)" }} /></a>
-          <button onClick={onClose} className="btn" style={{ background:"var(--accent)", color:"#fff", padding:8 }}><X size={16} /></button>
+        <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+          {esImg && (
+            <>
+              <button onClick={() => setZoom(z => Math.max(0.25, z - 0.25))} title="Alejar" style={{ background:"#232b38", color:"#e8ecf2", border:"none", borderRadius:7, padding:"7px 10px", cursor:"pointer", fontSize:14, fontWeight:700 }}>−</button>
+              <div style={{ color:"#e8ecf2", fontSize:11, display:"flex", alignItems:"center", padding:"0 8px", minWidth:42, justifyContent:"center" }} className="mono">{Math.round(zoom*100)}%</div>
+              <button onClick={() => setZoom(z => Math.min(5, z + 0.25))} title="Acercar" style={{ background:"#232b38", color:"#e8ecf2", border:"none", borderRadius:7, padding:"7px 10px", cursor:"pointer", fontSize:14, fontWeight:700 }}>+</button>
+              <button onClick={() => { setZoom(1); setRot(0); }} title="Reset" style={{ background:"#232b38", color:"#e8ecf2", border:"none", borderRadius:7, padding:"7px 10px", cursor:"pointer", fontSize:11 }}>1:1</button>
+              <button onClick={() => setRot(r => (r + 90) % 360)} title="Rotar" style={{ background:"#232b38", color:"#e8ecf2", border:"none", borderRadius:7, padding:"7px 10px", cursor:"pointer", fontSize:14 }}>↻</button>
+            </>
+          )}
+          {!esImg && (
+            <button onClick={abrirNueva} title="Abrir en pestaña nueva" style={{ background:"#232b38", color:"#e8ecf2", border:"none", borderRadius:7, padding:"7px 11px", cursor:"pointer", fontSize:12 }}>⤢</button>
+          )}
+          <a href={data} download={nombre || "documento"} title="Descargar" style={{ background:"#232b38", color:"#e8ecf2", padding:"7px 11px", textDecoration:"none", borderRadius:7, fontSize:13, display:"inline-flex", alignItems:"center" }}>⬇</a>
+          <button onClick={onClose} title="Cerrar" style={{ background:"#ff6b35", color:"#fff", border:"none", borderRadius:7, padding:"7px 12px", cursor:"pointer", fontSize:13 }}>✕</button>
         </div>
       </div>
-      <div style={{ flex:1, background:"#1a1a1a", display:"flex", alignItems:"center", justifyContent:"center", overflow:"auto" }}>
+      <div style={{ flex:1, background:"#1a1a1a", display:"flex", alignItems:esImg && zoom > 1 ? "flex-start" : "center", justifyContent:"center", overflow:"auto", padding: esImg ? 12 : 0 }}>
         {esImg ? (
-          <img src={data} alt={nombre} style={{ maxWidth:"100%", maxHeight:"100%", objectFit:"contain" }} />
+          <img src={data} alt={nombre} style={{ maxWidth: zoom <= 1 ? "100%" : "none", maxHeight: zoom <= 1 ? "100%" : "none", transform: "scale(" + zoom + ") rotate(" + rot + "deg)", transformOrigin: "center center", transition: "transform .15s ease", objectFit:"contain" }} />
         ) : (
           <iframe title={nombre || "pdf"} src={data} style={{ width:"100%", height:"100%", border:"none", background:"#fff" }} />
         )}
@@ -3858,7 +3914,7 @@ function PlanosManager({ obraId, idx=[], loadPlano, save, del }) {
         </div>
       ))}
       {!idx.length && <div style={{ textAlign:"center", color:"var(--ink2)", marginTop:20 }}>Sin planos cargados.</div>}
-      <DocViewer open={!!viewing} onClose={() => { setViewing(null); setViewingMeta(null); }} data={viewing} tipo="pdf" nombre={viewingMeta?.nombre} />
+      <DocViewer open={!!viewing} onClose={() => { setViewing(null); setViewingMeta(null); }} data={viewing} tipo="pdf" nombre={viewingMeta?.nombre} meta={viewingMeta ? (viewingMeta.especialidad || "") + " · " + (viewingMeta.version || "") + " · " + (viewingMeta.size || "?") + " KB" : ""} />
     </div>
   );
 }
@@ -3955,7 +4011,7 @@ function Cronograma({ obra, obraId, rows, save, cronoDoc, saveCronoDoc, visitas,
   const estado = (r) => { const tot = (new Date(r.fin) - new Date(r.inicio)) / 86400000 || 1; const trans = (new Date(hoy()) - new Date(r.inicio)) / 86400000; const esp = Math.max(0, Math.min(100, trans / tot * 100)); return (+r.avance || 0) < esp - 15 ? "var(--rojo)" : "var(--verde)"; };
   return (
     <div style={{ padding:14 }}>
-      <DocViewer open={verDoc} onClose={() => setVerDoc(false)} data={cronoDoc?.data} tipo={cronoDoc?.tipo} nombre={cronoDoc?.nombre} />
+      <DocViewer open={verDoc} onClose={() => setVerDoc(false)} data={cronoDoc?.data} tipo={cronoDoc?.tipo} nombre={cronoDoc?.nombre} meta={cronoDoc ? "Subido " + (cronoDoc.fecha || "") : ""} />
       <Section title="Cronograma adjunto (PDF / imagen)" icon={Upload}>
         <div style={{ fontSize:12.5, color:"var(--ink2)", marginBottom:8, lineHeight:1.45 }}>Subí el cronograma oficial de la obra (PDF o foto). La IA lo lee al generar el plan del día o la programación semanal.</div>
         {cronoDoc?.data ? (
@@ -5234,18 +5290,20 @@ function detectarReporteIntent(texto, obras, visitas) {
   return { kind:"ok", visita, formato, obra: (obras||[]).find(o => o.id === visita.obraId) };
 }
 
-function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro=[], apiKey, contextKey="general", contextData=null, onContextAction, zonas={}, saveCronoDoc, savePlano }) {
+const ESPECIALIDADES_PLANO_LIST = ["Arquitectura","Eléctricas","Sanitarias","Mecánico / A.A.","Mobiliario / Góndolas","LIDERMAN / Seguridad","DCI","Estructuras","Otro"];
+
+function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro=[], apiKey, contextKey="general", contextData=null, onContextAction, zonas={}, saveCronoDoc, savePlano, setTabAndObra }) {
   const promptsContextuales = getContextualPrompts(contextKey);
   const [msgs, setMsgs] = useState([{
     role:"assistant",
     content: contextKey === "general"
-      ? "Hola Renzo. Soy tu copiloto. Puedo:\n• Descargar reportes (decime 'reporte de Prescott del 29/05 en Word')\n• Subir tu cronograma: tocá 📎 y decí 'es el cronograma de [obra]'\n• Subir planos: tocá 📎 y decí 'plano de arquitectura de [obra]'\n• Buscar info, generar planes, analizar visitas.\nDecime qué necesitás."
+      ? "Hola Renzo. Soy tu copiloto. Puedo:\n• Descargar reportes (decime 'reporte de Prescott del 29/05 en Word')\n• Cargar tu cronograma / planos: tocá 📎 y elegí la obra\n• Buscar info, generar planes, analizar visitas.\nDecime qué necesitás."
       : "Estás en " + (contextKey === "visita" ? "una visita" : contextKey === "obra" ? "una obra" : contextKey) + ". Acá abajo tenés acciones rápidas, o preguntame lo que necesités."
   }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [attached, setAttached] = useState(null); // { nombre, tipo:"pdf"|"img", data:dataURL, size }
-  const [pendingAction, setPendingAction] = useState(null); // confirmación antes de ejecutar
+  const [fileMode, setFileMode] = useState({ tipoDoc: "crono", obraId: "", especialidad: "Arquitectura" });
   const fileRef = useRef(null);
   const endRef = useRef(null);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior:"smooth" }); }, [msgs, loading]);
@@ -5257,63 +5315,53 @@ function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro
     try {
       if (file.type === "application/pdf") {
         const data = await fileToDataURL(file);
-        if (!data) return alert("No se pudo leer el PDF.");
-        if (data.length > 4_500_000) return alert("PDF muy grande (>3.3MB). Comprimilo o subí solo la hoja relevante.");
+        if (!data) { alert("No se pudo leer el PDF."); return; }
+        // Limite generoso: ~6 MB en base64 (≈4.5 MB original)
+        if (data.length > 6_500_000) { alert("PDF muy grande (>4.5MB). Comprimilo o subí solo la hoja relevante."); return; }
         setAttached({ nombre: file.name, tipo:"pdf", data, size: file.size });
+        // Reset modo: cronograma por defecto, primera obra
+        setFileMode(m => ({ tipoDoc: m.tipoDoc || "crono", obraId: m.obraId || (obras[0]?.id || ""), especialidad: m.especialidad || "Arquitectura" }));
       } else if (file.type.startsWith("image/")) {
         const data = await compressImage(file, 1800, 0.75);
-        if (!data) return alert("No se pudo leer la imagen.");
+        if (!data) { alert("No se pudo leer la imagen."); return; }
         setAttached({ nombre: file.name, tipo:"img", data, size: file.size });
+        setFileMode(m => ({ tipoDoc:"crono", obraId: m.obraId || (obras[0]?.id || ""), especialidad: "Arquitectura" }));
       } else {
         alert("Subí un PDF o una imagen.");
       }
     } catch (err) { alert("Error al cargar: " + err.message); }
   };
 
-  // Detector de intención sobre archivo + texto: identifica si es cronograma, plano, foto, etc.
-  const detectActionConArchivo = (texto, file, obras) => {
-    if (!file) return null;
-    const t = (texto || "").toLowerCase();
-    // Encontrar obra mencionada
-    let obraId = null;
-    for (const o of (obras||[])) {
-      const n = (o.nombre || "").toLowerCase();
-      if (n && n.length > 3 && t.includes(n)) { obraId = o.id; break; }
-      const palabras = n.split(/\s+/).filter(w => w.length > 4);
-      if (palabras.some(w => t.includes(w))) { obraId = o.id; break; }
-    }
-    if (!obraId) {
-      for (const o of (obras||[])) {
-        const c = (o.cliente || "").toLowerCase();
-        if (c && t.includes(c)) { obraId = o.id; break; }
+  // Guardado directo según panel
+  const ejecutarGuardar = async () => {
+    if (!attached) { alert("No hay archivo adjunto."); return; }
+    if (!fileMode.obraId) { alert("Elegí una obra."); return; }
+    const obra = obras.find(o => o.id === fileMode.obraId);
+    if (!obra) { alert("Obra no encontrada."); return; }
+    try {
+      if (fileMode.tipoDoc === "crono") {
+        if (!saveCronoDoc) { alert("Función de guardar cronograma no disponible (recargá la app)."); return; }
+        await saveCronoDoc(obra.id, { id: uid(), nombre: attached.nombre, fecha: hoy(), tipo: attached.tipo, data: attached.data });
+        setMsgs(prev => [...prev, {
+          role:"assistant",
+          content: "✅ Cronograma guardado en " + obra.nombre + " (" + obra.cliente + ").",
+          actions: setTabAndObra ? [{ label:"📂 Abrir " + obra.nombre, fn: () => setTabAndObra("obra", obra.id), color:"var(--accent)" }] : []
+        }]);
+      } else if (fileMode.tipoDoc === "plano") {
+        if (attached.tipo !== "pdf") { alert("Los planos solo se aceptan en PDF. Reemplazá el archivo."); return; }
+        if (!savePlano) { alert("Función de guardar planos no disponible (recargá la app)."); return; }
+        await savePlano(obra.id, { id: uid(), nombre: attached.nombre.replace(/\.pdf$/i,""), fecha: hoy(), especialidad: fileMode.especialidad, version:"REV0", size: Math.round(attached.size/1024) }, attached.data);
+        setMsgs(prev => [...prev, {
+          role:"assistant",
+          content: "✅ Plano (" + fileMode.especialidad + ") guardado en " + obra.nombre + " (" + obra.cliente + ").",
+          actions: setTabAndObra ? [{ label:"📂 Abrir " + obra.nombre, fn: () => setTabAndObra("obra", obra.id), color:"var(--accent)" }] : []
+        }]);
       }
+      setAttached(null);
+    } catch (err) {
+      alert("Error al guardar: " + err.message);
+      setMsgs(prev => [...prev, { role:"assistant", content: "❌ Error al guardar: " + err.message }]);
     }
-    const obra = obras.find(o => o.id === obraId);
-    // Clasificar tipo de documento
-    const esCronograma = /cronograma|gantt|programaci[oó]n|cronog/.test(t);
-    const especialidades = ["arquitectura","el[eé]ctric","sanitar","mec[aá]nic","a\\.a\\.|aire acond","mobiliario","g[oó]ndol","seguridad|liderman","dci|detecci[oó]n","estructura"];
-    const espMap = ["Arquitectura","Eléctricas","Sanitarias","Mecánico / A.A.","Mecánico / A.A.","Mobiliario / Góndolas","Mobiliario / Góndolas","LIDERMAN / Seguridad","DCI","Estructuras"];
-    let espDetectada = null;
-    for (let i=0; i<especialidades.length; i++) { if (new RegExp(especialidades[i]).test(t)) { espDetectada = espMap[i]; break; } }
-    const esPlano = /plano|isometr[ií]co|elevaci[oó]n|planta|detalle/.test(t) || espDetectada != null;
-    if (esCronograma) return { kind:"crono", obra, obraId };
-    if (esPlano) return { kind:"plano", obra, obraId, especialidad: espDetectada || "Arquitectura" };
-    return { kind:"desconocido", obra, obraId };
-  };
-
-  // Ejecutores
-  const ejecutarGuardarCrono = (obra, file) => {
-    if (!saveCronoDoc) { alert("Función de guardar no disponible."); return; }
-    saveCronoDoc(obra.id, { id: uid(), nombre: file.nombre, fecha: hoy(), tipo: file.tipo, data: file.data });
-    setMsgs(prev => [...prev, { role:"assistant", content: "✓ Cronograma guardado en " + obra.nombre + ".\nVas a verlo en Obra → Cronograma." }]);
-    setPendingAction(null); setAttached(null);
-  };
-  const ejecutarGuardarPlano = (obra, file, especialidad) => {
-    if (!savePlano) { alert("Función de guardar no disponible."); return; }
-    if (file.tipo !== "pdf") { alert("Los planos solo se aceptan en PDF."); return; }
-    savePlano(obra.id, { id: uid(), nombre: file.nombre.replace(/\.pdf$/i,""), fecha: hoy(), especialidad, version:"REV0", size: Math.round(file.size/1024) }, file.data);
-    setMsgs(prev => [...prev, { role:"assistant", content: "✓ Plano (" + especialidad + ") guardado en " + obra.nombre + ".\nVas a verlo en Obra → Planos." }]);
-    setPendingAction(null); setAttached(null);
   };
 
   // Ejecutor de acciones de reporte
@@ -5351,39 +5399,9 @@ function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro
 
   const send = async (q) => {
     const p = (q ?? input).trim();
-    if (!p && !attached) return;
+    if (!p) return;
     if (loading) return;
     setInput("");
-    // Si hay archivo adjunto + texto: detectar acción
-    if (attached) {
-      const userMsg = (p || "Archivo adjunto: " + attached.nombre) + "\n📎 " + attached.nombre;
-      const disp = [...msgs, { role:"user", content: userMsg }];
-      setMsgs(disp);
-      const action = detectActionConArchivo(p, attached, obras);
-      if (action) {
-        if (action.kind === "crono" && action.obra) {
-          setMsgs([...disp, { role:"assistant", content: "📋 Detecté que es el **cronograma** de **" + action.obra.nombre + "** (" + action.obra.cliente + ").\n\n¿Guardarlo en la obra?" }]);
-          setPendingAction({ kind:"crono", obra: action.obra, file: attached });
-          return;
-        }
-        if (action.kind === "plano" && action.obra) {
-          setMsgs([...disp, { role:"assistant", content: "📐 Detecté que es un **plano** de **" + action.especialidad + "** para **" + action.obra.nombre + "** (" + action.obra.cliente + ").\n\n¿Guardarlo en la obra?" + (attached.tipo !== "pdf" ? "\n\n⚠ Los planos solo se aceptan en PDF. Subí el plano en PDF." : "") }]);
-          if (attached.tipo === "pdf") setPendingAction({ kind:"plano", obra: action.obra, file: attached, especialidad: action.especialidad });
-          else setAttached(null);
-          return;
-        }
-        if ((action.kind === "crono" || action.kind === "plano") && !action.obra) {
-          const obrasList = obras.slice(0, 12).map(o => "• " + o.nombre + " (" + o.cliente + ")").join("\n");
-          setMsgs([...disp, { role:"assistant", content: "Detecté que es un " + (action.kind === "crono" ? "cronograma" : "plano") + " pero no identifiqué la obra. Decime cuál es:\n\n" + obrasList + "\n\nEjemplo: \"es el cronograma de Aruma Prescott\"" }]);
-          return;
-        }
-        if (action.kind === "desconocido") {
-          setMsgs([...disp, { role:"assistant", content: "Veo el archivo **" + attached.nombre + "** pero no entendí qué hacer con él. Decime:\n• \"es el cronograma de [obra]\"\n• \"es el plano de arquitectura de [obra]\"\n• \"es el plano de eléctricas de [obra]\"\n\nO escribime tu mensaje sin archivo si querés solo consultar." }]);
-          return;
-        }
-      }
-      setAttached(null);
-    }
     const disp = [...msgs, { role:"user", content:p }]; setMsgs(disp); setLoading(true);
     // 1) Detectar intent de descarga de reporte
     const intent = detectarReporteIntent(p, obras, visitas);
@@ -5467,35 +5485,41 @@ function IAChat({ obras, visitas, notas, incidencias, decisiones, crono, cerebro
             </div>
           </>
         )}
-        {/* Confirmación de acción pendiente */}
-        {pendingAction && (
-          <div className="card glow-ia" style={{ padding:12, marginTop:10, borderColor:"var(--ia)", background:"rgba(167,139,250,.08)" }}>
-            <div style={{ fontSize:12.5, color:"var(--ia)", marginBottom:9, fontWeight:600 }}>
-              {pendingAction.kind === "crono" ? "📋 Guardar cronograma en " + pendingAction.obra.nombre : "📐 Guardar plano (" + pendingAction.especialidad + ") en " + pendingAction.obra.nombre}
-            </div>
-            <div style={{ display:"flex", gap:7 }}>
-              <button onClick={() => { setPendingAction(null); setAttached(null); setMsgs(prev => [...prev, { role:"assistant", content: "Cancelado." }]); }} className="btn" style={{ flex:1, background:"var(--surface3)", color:"var(--ink)", padding:9, fontSize:12.5 }}>Cancelar</button>
-              <button onClick={() => { if (pendingAction.kind === "crono") ejecutarGuardarCrono(pendingAction.obra, pendingAction.file); else if (pendingAction.kind === "plano") ejecutarGuardarPlano(pendingAction.obra, pendingAction.file, pendingAction.especialidad); }} className="btn" style={{ flex:2, background:"var(--verde)", color:"#fff", padding:9, fontSize:12.5, fontWeight:600 }}>✓ Guardar</button>
-            </div>
-          </div>
-        )}
         <div ref={endRef} />
       </div>
-      {/* Preview del archivo adjunto */}
-      {attached && !pendingAction && (
-        <div style={{ display:"flex", alignItems:"center", gap:9, padding:"9px 12px", background:"var(--surface2)", borderTop:"1px solid var(--border)", fontSize:12.5 }}>
-          <span style={{ fontSize:18 }}>{attached.tipo === "pdf" ? "📄" : "🖼"}</span>
-          <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", color:"var(--ink)" }}>{attached.nombre}</div>
-            <div className="mono" style={{ fontSize:10.5, color:"var(--ink3)" }}>{(attached.size/1024).toFixed(0)} KB · escribí qué hago con este archivo</div>
+      {/* Panel de archivo adjunto: select obra + tipo + guardar */}
+      {attached && (
+        <div style={{ padding:"11px 12px", background:"var(--surface2)", borderTop:"1px solid var(--ia)", borderBottom:"1px solid var(--border)" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:10 }}>
+            <span style={{ fontSize:22 }}>{attached.tipo === "pdf" ? "📄" : "🖼"}</span>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", color:"var(--ink)", fontWeight:600, fontSize:13 }}>{attached.nombre}</div>
+              <div className="mono" style={{ fontSize:10.5, color:"var(--ink3)" }}>{(attached.size/1024).toFixed(0)} KB · {attached.tipo.toUpperCase()}</div>
+            </div>
+            <button onClick={() => setAttached(null)} className="btn" style={{ background:"transparent", padding:5 }}><X size={15} color="var(--rojo)" /></button>
           </div>
-          <button onClick={() => setAttached(null)} className="btn" style={{ background:"transparent", padding:5 }}><X size={15} color="var(--rojo)" /></button>
+          <div style={{ display:"flex", gap:6, marginBottom:8 }}>
+            <button onClick={() => setFileMode({ ...fileMode, tipoDoc:"crono" })} className="btn" style={{ flex:1, padding:9, fontSize:12.5, background: fileMode.tipoDoc === "crono" ? "var(--ia)" : "var(--surface)", color: fileMode.tipoDoc === "crono" ? "#fff" : "var(--ink2)", border: "1px solid " + (fileMode.tipoDoc === "crono" ? "var(--ia)" : "var(--border)"), fontWeight: fileMode.tipoDoc === "crono" ? 700 : 500 }}>📋 Cronograma</button>
+            <button onClick={() => setFileMode({ ...fileMode, tipoDoc:"plano" })} className="btn" style={{ flex:1, padding:9, fontSize:12.5, background: fileMode.tipoDoc === "plano" ? "var(--ia)" : "var(--surface)", color: fileMode.tipoDoc === "plano" ? "#fff" : "var(--ink2)", border: "1px solid " + (fileMode.tipoDoc === "plano" ? "var(--ia)" : "var(--border)"), fontWeight: fileMode.tipoDoc === "plano" ? 700 : 500 }} disabled={attached.tipo !== "pdf"} title={attached.tipo !== "pdf" ? "Solo PDF" : ""}>📐 Plano</button>
+          </div>
+          <div style={{ display:"flex", gap:6, marginBottom:8 }}>
+            <select className="inp" value={fileMode.obraId} onChange={e => setFileMode({ ...fileMode, obraId: e.target.value })} style={{ flex:1, padding:9, fontSize:12.5 }}>
+              <option value="">— Elegí obra —</option>
+              {obras.map(o => <option key={o.id} value={o.id}>{o.cliente} · {o.nombre}</option>)}
+            </select>
+            {fileMode.tipoDoc === "plano" && (
+              <select className="inp" value={fileMode.especialidad} onChange={e => setFileMode({ ...fileMode, especialidad: e.target.value })} style={{ flex:1, padding:9, fontSize:12.5 }}>
+                {ESPECIALIDADES_PLANO_LIST.map(esp => <option key={esp} value={esp}>{esp}</option>)}
+              </select>
+            )}
+          </div>
+          <button onClick={ejecutarGuardar} disabled={!fileMode.obraId} className="btn" style={{ background: fileMode.obraId ? "var(--verde)" : "var(--surface3)", color:"#fff", padding:11, width:"100%", fontWeight:700, fontSize:13 }}>{fileMode.obraId ? "✓ Guardar en " + (obras.find(o=>o.id===fileMode.obraId)?.nombre || "la obra") : "Elegí una obra primero"}</button>
         </div>
       )}
       <div style={{ display:"flex", gap:8, padding:12, borderTop:"1px solid var(--border)", background:"var(--surface)" }}>
         <input ref={fileRef} type="file" accept="application/pdf,image/*" onChange={handleFile} style={{ display:"none" }} />
-        <button onClick={() => fileRef.current && fileRef.current.click()} className="btn" title="Adjuntar PDF o imagen" style={{ background:"var(--surface3)", color:"var(--ink)", padding:"0 11px", fontSize:18 }}>📎</button>
-        <input className="inp" placeholder={attached ? "Decime qué hacer con el archivo (ej. 'es el cronograma de Prescott')" : "Pregunta o pedí un reporte…"} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") send(); }} />
+        <button onClick={() => fileRef.current && fileRef.current.click()} className="btn" title="Adjuntar cronograma o plano" style={{ background:"var(--surface3)", color:"var(--ink)", padding:"0 11px", fontSize:18 }}>📎</button>
+        <input className="inp" placeholder="Pregunta o pedí un reporte…" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") send(); }} />
         <button className="btn" onClick={() => send()} disabled={loading} style={{ background:"linear-gradient(135deg, var(--ia), #c4b5fd)", color:"#fff", padding:"0 16px" }}><Send size={18} /></button>
       </div>
     </div>
